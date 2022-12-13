@@ -11,7 +11,6 @@ class TestExamples(FuzzyTestCase):
 
     def test_main(self):
         content = File("tests/examples/aws/aws_domain_redirect/main.tf").read()
-        with Debugger():
-            result = parse(content)
+        result = parse(content)
         expected = {}
         self.assertEqual(result, expected)

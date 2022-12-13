@@ -5,6 +5,8 @@ Parse terraform scripts for further processing
 ## Description
 
 
-https://github.com/mjuenema/python-terrascript
+
+https://github.com/starhawking/python-terrascript
+
 
 
