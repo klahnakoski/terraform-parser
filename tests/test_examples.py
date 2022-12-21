@@ -152,8 +152,8 @@ class TestExamples(FuzzyTestCase):
             {"aws_volume_attachment": {"this": [
                 {"count": {"if_then_else": [
                     {"eq": ["var.data_volume_id", {"literal": ""}]},
-                    "0",
-                    "1",
+                    0,
+                    1,
                 ]}},
                 {"device_name": {"literal": "/dev/xvdh"}},
                 {"instance_id": "aws_instance.this.id"},
@@ -162,8 +162,8 @@ class TestExamples(FuzzyTestCase):
             {"null_resource": {"provisioners": [
                 {"count": {"if_then_else": [
                     {"eq": ["var.data_volume_id", {"literal": ""}]},
-                    "0",
-                    "1",
+                    0,
+                    1,
                 ]}},
                 {"depends_on": {"literal": "aws_volume_attachment.this"}},
                 {"connection": [
@@ -222,7 +222,7 @@ class TestExamples(FuzzyTestCase):
             ]}}},
             {"local": {"availability_zone": {"get": [
                 "data.aws_availability_zones.this.names",
-                "0",
+                0,
             ]}}},
             {"var": {"hostname": [
                 {"description": {
@@ -301,7 +301,7 @@ class TestExamples(FuzzyTestCase):
                         " mounted as the root fs for the host"
                     )
                 }},
-                {"default": "8"},
+                {"default": 8},
             ]}},
             {"var": {"data_volume_id": [
                 {"description": {
@@ -372,14 +372,14 @@ class TestExamples(FuzzyTestCase):
                     "aws_lambda_function.local_zipfile.*.id",
                     {"list": {"literal": ""}},
                 ]},
-                "0",
+                0,
             ]},
             {"element": [
                 {"concat": [
                     "aws_lambda_function.s3_zipfile.*.id",
                     {"list": {"literal": ""}},
                 ]},
-                "0",
+                0,
             ]},
         ]}}}
         self.assertEqual(result, expect)
