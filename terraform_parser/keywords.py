@@ -7,8 +7,8 @@
 # Contact: Kyle Lahnakoski (kyle@lahnakoski.com)
 #
 # SIMPLE OPERATORS
-from mo_parsing import Literal, RIGHT_ASSOC
-from terraform_parser.utils import keyword, SQL_NULL
+from mo_parsing import Literal, RIGHT_ASSOC, Regex
+from terraform_parser.utils import keyword, SQL_NULL, set_parser_names
 
 NULL = keyword("null") / (lambda: SQL_NULL)
 TRUE = keyword("true") / (lambda: True)
@@ -80,3 +80,9 @@ binary_ops = {
     "<>": "neq",
 }
 
+# NUMBERS
+real_num = Regex(r"[+-]?(\d+\.\d*|\.\d+)([eE][+-]?\d+)?") / (lambda t: float(t[0]))
+int_num = Regex(r"[+-]?\d+") / (lambda t: int(t[0]))
+
+
+set_parser_names()

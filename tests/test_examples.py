@@ -361,102 +361,51 @@ class TestExamples(FuzzyTestCase):
         ]
         self.assertEqual(result, expect)
 
-    def test_lambda(self):
-        content = File("tests/examples/aws/aws_lambda_api/main.tf").read()
+    def test_splat(self):
+        content = """locals {
+          function_id         = "${element(concat(aws_lambda_function.local_zipfile.*.id, list("")), 0)}${element(concat(aws_lambda_function.s3_zipfile.*.id, list("")), 0)}"
+        }"""
         result = parse(content)
-        expect = [
-            {"aws_lambda_function": {"local_zipfile": [
-                {"count": {"if_then_else": [
-                    {"eq": ["var.function_s3_bucket", {"literal": ""}]},
-                    "1",
-                    "0",
-                ]}},
-                {"filename": "var.function_zipfile"},
-                {"source_code_hash": {"if_then_else": [
-                    {"eq": ["var.function_s3_bucket", {"literal": ""}]},
-                    {"base64sha256": {"file": "var.function_zipfile"}},
-                    {"literal": ""},
-                ]}},
-                {"description": {"concat": ["var.comment_prefix", "var.api_domain"]}},
-                {"function_name": "local.prefix_with_domain"},
-                {"handler": "var.function_handler"},
-                {"runtime": "var.function_runtime"},
-                {"timeout": "var.function_timeout"},
-                {"memory_size": "var.memory_size"},
-                {"role": "aws_iam_role.this.arn"},
-                {"tags": "var.tags"},
-                {"environment": {"variables": "var.function_env_vars"}},
-            ]}},
-            {"aws_lambda_function": {"s3_zipfile": [
-                {"count": {"if_then_else": [
-                    {"eq": ["var.function_s3_bucket", {"literal": ""}]},
-                    "0",
-                    "1",
-                ]}},
-                {"s3_bucket": "var.function_s3_bucket"},
-                {"s3_key": "var.function_zipfile"},
-                {"description": {"concat": ["var.comment_prefix", "var.api_domain"]}},
-                {"function_name": "local.prefix_with_domain"},
-                {"handler": "var.function_handler"},
-                {"runtime": "var.function_runtime"},
-                {"timeout": "var.function_timeout"},
-                {"memory_size": "var.memory_size"},
-                {"role": "aws_iam_role.this.arn"},
-                {"tags": "var.tags"},
-                {"environment": {"variables": "var.function_env_vars"}},
-            ]}},
-            {"local": [
-                {"function_id": {"concat": [
-                    {"element": [
-                        {"concat": [
-                            "aws_lambda_function.local_zipfile.*.id",
-                            {"list": {"literal": ""}},
-                        ]},
-                        "0",
-                    ]},
-                    {"element": [
-                        {"concat": [
-                            "aws_lambda_function.s3_zipfile.*.id",
-                            {"list": {"literal": ""}},
-                        ]},
-                        "0",
-                    ]},
-                ]}},
-                {"function_arn": {"concat": [
-                    {"element": [
-                        {"concat": [
-                            "aws_lambda_function.local_zipfile.*.arn",
-                            {"list": {"literal": ""}},
-                        ]},
-                        "0",
-                    ]},
-                    {"element": [
-                        {"concat": [
-                            "aws_lambda_function.s3_zipfile.*.arn",
-                            {"list": {"literal": ""}},
-                        ]},
-                        "0",
-                    ]},
-                ]}},
-                {"function_invoke_arn": {"concat": [
-                    {"element": [
-                        {"concat": [
-                            "aws_lambda_function.local_zipfile.*.invoke_arn",
-                            {"list": {"literal": ""}},
-                        ]},
-                        "0",
-                    ]},
-                    {"element": [
-                        {"concat": [
-                            "aws_lambda_function.s3_zipfile.*.invoke_arn",
-                            {"list": {"literal": ""}},
-                        ]},
-                        "0",
-                    ]},
-                ]}},
+        expect = {"local": {"function_id": {"concat": [
+            {"element": [
+                {"concat": [
+                    "aws_lambda_function.local_zipfile.*.id",
+                    {"list": {"literal": ""}},
+                ]},
+                "0",
             ]},
-        ]
+            {"element": [
+                {"concat": [
+                    "aws_lambda_function.s3_zipfile.*.id",
+                    {"list": {"literal": ""}},
+                ]},
+                "0",
+            ]},
+        ]}}}
         self.assertEqual(result, expect)
+
+    def test_output(self):
+        content = """output "hostname" {
+          description = "Hostname by which this service is identified in metrics, logs etc"
+          value       = "${var.hostname}"
+        }"""
+        result = parse(content)
+        expect = {"output": {"hostname": [
+            {"description": {
+                "literal": (
+                    "Hostname by which this service is identified in metrics, logs etc"
+                )
+            }},
+            {"value": "var.hostname"},
+        ]}}
+        self.assertEqual(result, expect)
+
+    def test_neg_int(self):
+        content = """output "host" {value="${-1}"}"""
+        result = parse(content)
+        expect = {"output": {"host": {"value": -1}}}
+        self.assertEqual(result, expect)
+
 
     def test_examples(self):
         def parser(text, attachments) -> Data:

@@ -73,6 +73,8 @@ with multiline_white:
         | multiline
         | (identifier("op") + LP + delimited_list(expression("params")) + RP)
         / to_json_call
+        | real_num
+        | int_num
         | path
     )
 
@@ -93,21 +95,15 @@ with multiline_white:
         / to_code
     )
 
-    resource = (
-        Keyword("resource").suppress() + compound_string + compound_string + json("params")
-    ) / to_inner_object
-    data = (
-        Keyword("data") + compound_string + compound_string + json
-    ) / to_inner_object
-    module = (Keyword("module").suppress() + compound_string + json) / to_inner_object
-
+    resource = Keyword("resource").suppress() + compound_string + compound_string + json("params")
+    data = Keyword("data") + compound_string + compound_string + json
+    module = Keyword("module").suppress() + compound_string + json
     # module = (identifier("type") + string("name") + json("params")) / dict
-    variable = (
-        Keyword("variable") / "var" + compound_string + json("params")
-    ) / to_inner_object
-    local = (Keyword("locals") / "local" + json("params")) / to_inner_object
+    variable = Keyword("variable") / "var" + compound_string + json("params")
+    output = Keyword("output") + compound_string + json("params")
+    local = Keyword("locals") / "local" + json("params")
 
-    terraform = ZeroOrMore(resource | data | module | variable | local)
+    terraform = ZeroOrMore((resource | data | module | variable | output | local)/to_inner_object)
 
 set_parser_names()
 
