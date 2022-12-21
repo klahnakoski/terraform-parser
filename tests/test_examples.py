@@ -66,8 +66,7 @@ class TestExamples(FuzzyTestCase):
 
     def test_data(self):
         content = File("tests/examples/aws/aws_ec2_ebs_docker_host/data.tf").read()
-        with Debugger():
-            result = parse(content)
+        result = parse(content)
         expected = [
             {
                 "name": {"literal": "this"},

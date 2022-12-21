@@ -27,7 +27,7 @@ with whitespaces.NO_WHITESPACE:
     quote = Literal('"').suppress()
     code = Literal("${").suppress() + expression + Literal("}").suppress()
     simple_string = Regex(r"(\\\"|\$[^{]|[^\"$])+") / to_string
-    string = Group(quote + ZeroOrMore(simple_string | code) + quote)
+    string = Group(quote + ZeroOrMore(simple_string | code) + quote) / to_concat
     multiline_string = Regex(r"(\$[^{]|[^$])+") / to_multiline_string
     multiline_string_parser = ZeroOrMore(multiline_string | code).finalize()
 

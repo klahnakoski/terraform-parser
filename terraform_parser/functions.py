@@ -30,6 +30,15 @@ def to_string(tokens):
     return {"literal": value}
 
 
+def to_concat(tokens):
+    items = list(tokens)
+    if not items:
+        return {"literal": ""}
+    if len(items) == 1:
+        return tokens
+    return {"concat": items}
+
+
 def to_multiline_string(tokens):
     return {"literal": tokens[0]}
 

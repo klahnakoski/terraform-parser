@@ -472,7 +472,8 @@ class ParserElement(object):
                 next_result = fn(result, result.start, string)
                 if next_result.end < result.end:
                     Log.error(
-                        "parse action not allowed to roll back the end of parsing"
+                        "parse action {{name}} not allowed to roll back the end of parsing",
+                        name=fn.__name__
                     )
                 result = next_result
         return result
