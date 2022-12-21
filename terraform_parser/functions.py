@@ -39,16 +39,12 @@ def to_concat(tokens):
     return {"concat": items}
 
 
-def to_multiline_string(tokens):
+def to_literal(tokens):
     return {"literal": tokens[0]}
 
 
 def to_multiline(tokens):
     return {"concat": multiline_string_parser.parse(tokens['content'])}
-
-
-def to_var(tokens):
-    return tokens[0]
 
 
 def to_code(tokens):
@@ -63,10 +59,6 @@ def multiline_content(tokens, _, string):
 def if_else(tokens):
     when, _, then, _, els_ = list(tokens)
     return {"when": when, "then": then, "else": els_}
-
-
-def to_name(tokens):
-    return tokens[0]["literal"]
 
 
 def to_inner_object(tokens):

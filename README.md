@@ -2,6 +2,7 @@
 
 Parse terraform scripts for further processing
 
+
 ## Status
 
 **Dec 2022** - This an experimental parser  
@@ -28,6 +29,12 @@ The hope is to
 ## References
 
 * Look at what is done here - https://github.com/starhawking/python-terrascript
+
+Found some parsers!
+
+* https://github.com/virtuald/pyhcl
+* https://pypi.org/project/python-hcl2/
+
 
 
 

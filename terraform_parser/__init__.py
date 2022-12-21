@@ -21,14 +21,14 @@ compound = Forward()
 
 with whitespaces.NO_WHITESPACE:
     CR = Regex(r"\n")
-    identifier = Regex(r"\w+")
+    identifier = Regex(r"[\w](\[\d+\]|[-\w])*")
     quote = Literal('"').suppress()
     code = Literal("${").suppress() + expression + Literal("}").suppress()
     string_segment = Regex(r"(\\\"|\$[^{]|[^\"$])+") / to_string
     compound_string = (
         Group(quote + ZeroOrMore(string_segment | code) + quote) / to_concat
     )
-    multiline_string = Regex(r"(\$[^{]|[^$])+") / to_multiline_string
+    multiline_string = Regex(r"(\$[^{]|[^$])+") / to_literal
     multiline_string_parser = ZeroOrMore(multiline_string | code).finalize()
 
     rest = Forward()
@@ -43,7 +43,7 @@ with whitespaces.NO_WHITESPACE:
 
     path = delimited_list(identifier|"*", ".", combine=True)
 
-comment = Literal("#").suppress() + SkipTo(CR)
+    comment = Literal("#").suppress() + SkipTo(CR) | "/*"+SkipTo("*/", include=True)
 
 white = Whitespace(white="\t ")
 white.add_ignore(comment)
@@ -55,14 +55,13 @@ json = Forward()
 
 with white:
     assignment = identifier + Group(ASSIGN + compound | json)
-
     property = compound_string + Group(ASSIGN + compound | json)
     provisioner = Keyword("provisioner") + compound_string + json
-
     assignments = delimited_list(
         Group(provisioner | assignment | property)/to_inner_object, separator=OneOrMore(CR)
     )
     dynamic_accessor = LB + expression + RB
+    simple_accessor = Literal(".").suppress() + identifier / to_literal
 
 with multiline_white:
     json << LC + Optional(Group(assignments)) + RC
@@ -81,7 +80,9 @@ with multiline_white:
     expression << (
         infix_notation(
             compound,
-            [(dynamic_accessor, 1, LEFT_ASSOC, to_offset)]
+            [(dynamic_accessor, 1, LEFT_ASSOC, to_offset),
+             (simple_accessor, 1, LEFT_ASSOC, to_offset,),
+             ]
             + [
                 (
                     o,

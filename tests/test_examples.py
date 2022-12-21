@@ -220,10 +220,7 @@ class TestExamples(FuzzyTestCase):
                 ]}},
                 {"literal": "\n  "},
             ]}}},
-            {"local": {"availability_zone": {"get": [
-                "data.aws_availability_zones.this.names",
-                0,
-            ]}}},
+            {"local": {"availability_zone":                "data.aws_availability_zones.this.names[0]"}},
             {"var": {"hostname": [
                 {"description": {
                     "literal": (
@@ -405,6 +402,32 @@ class TestExamples(FuzzyTestCase):
         result = parse(content)
         expect = {"output": {"host": {"value": -1}}}
         self.assertEqual(result, expect)
+
+    def test_comment(self):
+        content = """/**/"""
+        result = parse(content)
+        expect = None
+        self.assertEqual(result, expect)
+
+    def test_dashes_in_identifier(self):
+        content = """output "host_w-dash" {}"""
+        result = parse(content)
+        expect = {"output": {"host_w-dash": {}}}
+        self.assertEqual(result, expect)
+
+    def test_0_in_path(self):
+        content = """output "host" {  name    = "${aws_acm_certificate.this.domain_validation_options.0.resource_record_name}"}"""
+        result = parse(content)
+        expect = {"output": {"host": {"name": "aws_acm_certificate.this.domain_validation_options.0.resource_record_name"}}}
+        self.assertEqual(result, expect)
+
+    def test_dot_accessor_in_path(self):
+        content = """output "host" {  subnet_id = aws_subnet.private_subnet[1].id}"""
+        with Debugger():
+            result = parse(content)
+        expect = {"output": {"host": {"subnet_id": "aws_subnet.private_subnet[1].id"}}}
+        self.assertEqual(result, expect)
+
 
 
     def test_examples(self):
