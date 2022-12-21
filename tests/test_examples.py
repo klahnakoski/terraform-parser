@@ -1,12 +1,10 @@
-import json
-
-from mo_dots import Data
+from mo_dots import Data, exists
 from mo_logs import logger
-from mo_parsing.debug import Debugger
 from mo_testing.fuzzytestcase import FuzzyTestCase
 
 from mo_files import File
-from mo_streams import it, stream, ERROR
+from mo_parsing.debug import Debugger
+from mo_streams import it, stream
 from terraform_parser import parse
 
 
@@ -17,115 +15,69 @@ class TestExamples(FuzzyTestCase):
     def test_main(self):
         content = File("tests/examples/aws/aws_domain_redirect/main.tf").read()
         result = parse(content)
-        expected = {
-            "type": "module",
-            "name": {"literal": "aws_reverse_proxy"},
-            "params": [
+        expected = {"aws_reverse_proxy": [
+            {"source": {
+                "literal": "git::ssh://git@github.com/futurice/terraform-utils.git//aws_reverse_proxy?ref=v11.0"
+            }},
+            {"origin_url": {"literal": "http://example.com/"}},
+            {"site_domain": "var.redirect_domain"},
+            {"name_prefix": "var.name_prefix"},
+            {"comment_prefix": "var.comment_prefix"},
+            {"cloudfront_price_class": "var.cloudfront_price_class"},
+            {"viewer_https_only": "var.viewer_https_only"},
+            {"lambda_logging_enabled": "var.lambda_logging_enabled"},
+            {"tags": "var.tags"},
+            {"add_response_headers": [
+                {"Strict-Transport-Security": {"if_then_else": [
+                    "var.redirect_with_hsts",
+                    {"literal": "max-age=31557600; preload"},
+                    {"literal": ""},
+                ]}},
+                {"Location": "var.redirect_url"},
+            ]},
+            {"override_response_status": {"if_then_else": [
+                "var.redirect_permanently",
+                {"literal": "301"},
+                {"literal": "302"},
+            ]}},
+            {"override_response_status_description": {"if_then_else": [
+                "var.redirect_permanently",
+                {"literal": "Moved Permanently"},
+                {"literal": "Found"},
+            ]}},
+            {"override_response_body": {"concat": [
                 {
-                    "name": "source",
-                    "value": {
-                        "literal": "git::ssh://git@github.com/futurice/terraform-utils.git//aws_reverse_proxy?ref=v11.0"
-                    },
+                    "literal": (
+                        '\n  <!doctype html>\n  <html lang="en">\n  <head>\n    <meta'
+                        ' charset="utf-8">\n    <title>Redirecting</title>\n  </head>\n'
+                        '  <body>\n    <pre>Redirecting to: <a href="'
+                    )
                 },
-                {"name": "origin_url", "value": {"literal": "http://example.com/"}},
-                {"name": "site_domain", "value": "var.redirect_domain"},
-                {"name": "name_prefix", "value": "var.name_prefix"},
-                {"name": "comment_prefix", "value": "var.comment_prefix"},
-                {
-                    "name": "cloudfront_price_class",
-                    "value": "var.cloudfront_price_class",
-                },
-                {"name": "viewer_https_only", "value": "var.viewer_https_only"},
-                {
-                    "name": "lambda_logging_enabled",
-                    "value": "var.lambda_logging_enabled",
-                },
-                {"name": "tags", "value": "var.tags"},
-                {
-                    "name": "add_response_headers",
-                    "value": [
-                        {
-                            "name": "Strict-Transport-Security",
-                            "value": {"if_then_else": [
-                                "var.redirect_with_hsts",
-                                {"literal": "max-age=31557600; preload"},
-                                {"literal": ""},
-                            ]},
-                        },
-                        {"name": "Location", "value": "var.redirect_url"},
-                    ],
-                },
-                {
-                    "name": "override_response_status",
-                    "value": {"if_then_else": [
-                        "var.redirect_permanently",
-                        {"literal": "301"},
-                        {"literal": "302"},
-                    ]},
-                },
-                {
-                    "name": "override_response_status_description",
-                    "value": {"if_then_else": [
-                        "var.redirect_permanently",
-                        {"literal": "Moved Permanently"},
-                        {"literal": "Found"},
-                    ]},
-                },
-                {
-                    "name": "override_response_body",
-                    "value": {"concat": [
-                        {
-                            "literal": (
-                                '\n  <!doctype html>\n  <html lang="en">\n  <head>\n   '
-                                ' <meta charset="utf-8">\n   '
-                                " <title>Redirecting</title>\n  </head>\n  <body>\n   "
-                                ' <pre>Redirecting to: <a href="'
-                            )
-                        },
-                        "var.redirect_url",
-                        {"literal": '">'},
-                        "var.redirect_url",
-                        {"literal": "</a></pre>\n  </body>\n  "},
-                    ]},
-                },
-            ],
-        }
+                "var.redirect_url",
+                {"literal": '">'},
+                "var.redirect_url",
+                {"literal": "</a></pre>\n  </body>\n  "},
+            ]}},
+        ]}
         self.assertEqual(result, expected)
 
     def test_data(self):
         content = File("tests/examples/aws/aws_ec2_ebs_docker_host/data.tf").read()
         result = parse(content)
         expected = [
-            {
-                "name": {"literal": "this"},
-                "resource": {"literal": "aws_availability_zones"},
-                "type": "data",
-            },
-            {
-                "name": {"literal": "this"},
-                "params": [
-                    {
-                        "name": "default",
-                        "value": {"if_then_else": [
-                            {"eq": ["var.vpc_id", {"literal": ""}]},
-                            "true",
-                            "false",
-                        ]},
-                    },
-                    {"name": "id", "value": "var.vpc_id"},
-                ],
-                "resource": {"literal": "aws_vpc"},
-                "type": "data",
-            },
-            {
-                "name": {"literal": "this"},
-                "params": [
-                    {"name": "vpc_id", "value": "data.aws_vpc.this.id"},
-                    {"name": "availability_zone", "value": "local.availability_zone"},
-                ],
-                "resource": {"literal": "aws_subnet"},
-                "type": "data",
-            },
+            {"data": {"aws_availability_zones": {"literal": "this"}}},
+            {"data": {"aws_vpc": {"this": [
+                {"default": {"if_then_else": [
+                    {"eq": ["var.vpc_id", {"literal": ""}]},
+                    "true",
+                    "false",
+                ]}},
+                {"id": "var.vpc_id"},
+            ]}}},
+            {"data": {"aws_subnet": {"this": [
+                {"vpc_id": "data.aws_vpc.this.id"},
+                {"availability_zone": "local.availability_zone"},
+            ]}}},
         ]
         self.assertEqual(result, expected)
 
@@ -133,201 +85,383 @@ class TestExamples(FuzzyTestCase):
         content = File("tests/examples/aws/aws_ec2_ebs_docker_host/main.tf").read()
         result = parse(content)
         expected = [
-            {
-                "name": {"literal": "this"},
-                "params": [
-                    {"name": "instance_type", "value": "var.instance_type"},
-                    {"name": "ami", "value": "var.instance_ami"},
-                    {"name": "availability_zone", "value": "local.availability_zone"},
-                    {"name": "key_name", "value": "aws_key_pair.this.id"},
-                    {
-                        "name": "vpc_security_group_ids",
-                        "value": "aws_security_group.this.id",
-                    },
-                    {"name": "subnet_id", "value": "data.aws_subnet.this.id"},
-                    {
-                        "name": "user_data",
-                        "value": {"sha1": "local.reprovision_trigger"},
-                    },
-                    {
-                        "name": "tags",
-                        "value": {"merge": [
-                            "var.tags",
-                            {"map": [{"literal": "Name"}, "var.hostname"]},
-                        ]},
-                    },
-                    {
-                        "name": "volume_tags",
-                        "value": {"merge": [
-                            "var.tags",
-                            {"map": [{"literal": "Name"}, "var.hostname"]},
-                        ]},
-                    },
-                    {
-                        "name": "root_block_device",
-                        "value": {
-                            "name": "volume_size",
-                            "value": "var.root_volume_size",
-                        },
-                    },
-                    {
-                        "name": "connection",
-                        "value": [
-                            {"name": "user", "value": "var.ssh_username"},
-                            {
-                                "name": "private_key",
-                                "value": {"file": "var.ssh_private_key_path"},
-                            },
-                            {"name": "agent", "value": "false"},
-                        ],
-                    },
-                    {"provisioner": [
-                        {"literal": "remote-exec"},
-                        {
-                            "name": "inline",
-                            "value": [
-                                {"concat": [
-                                    {"literal": "sudo hostnamectl set-hostname "},
-                                    "var.hostname",
-                                ]},
-                                {"concat": [
-                                    {"literal": "echo 127.0.0.1 "},
-                                    "var.hostname",
-                                    {"literal": " | sudo tee -a /etc/hosts"},
-                                ]},
-                            ],
-                        },
+            {"aws_instance": {"this": [
+                {"instance_type": "var.instance_type"},
+                {"ami": "var.instance_ami"},
+                {"availability_zone": "local.availability_zone"},
+                {"key_name": "aws_key_pair.this.id"},
+                {"vpc_security_group_ids": "aws_security_group.this.id"},
+                {"subnet_id": "data.aws_subnet.this.id"},
+                {"user_data": {"sha1": "local.reprovision_trigger"}},
+                {"tags": {"merge": [
+                    "var.tags",
+                    {"map": [{"literal": "Name"}, "var.hostname"]},
+                ]}},
+                {"volume_tags": {"merge": [
+                    "var.tags",
+                    {"map": [{"literal": "Name"}, "var.hostname"]},
+                ]}},
+                {"root_block_device": {"volume_size": "var.root_volume_size"}},
+                {"connection": [
+                    {"user": "var.ssh_username"},
+                    {"private_key": {"file": "var.ssh_private_key_path"}},
+                    {"agent": "false"},
+                ]},
+                {"provisioner": {"remote-exec": {"inline": [
+                    {"concat": [
+                        {"literal": "sudo hostnamectl set-hostname "},
+                        "var.hostname",
                     ]},
-                    {"provisioner": [
-                        {"literal": "remote-exec"},
-                        {
-                            "name": "script",
-                            "value": {"concat": [
-                                "path.module",
-                                {"literal": "/provision-docker.sh"},
-                            ]},
-                        },
+                    {"concat": [
+                        {"literal": "echo 127.0.0.1 "},
+                        "var.hostname",
+                        {"literal": " | sudo tee -a /etc/hosts"},
                     ]},
-                    {"provisioner": [
-                        {"literal": "file"},
-                        {
-                            "name": "source",
-                            "value": {"concat": [
-                                "path.module",
-                                {"literal": "/provision-swap.sh"},
-                            ]},
-                        },
-                        {
-                            "name": "destination",
-                            "value": {"concat": [
-                                {"literal": "/home/"},
-                                "var.ssh_username",
-                                {"literal": "/provision-swap.sh"},
-                            ]},
-                        },
+                ]}}},
+                {"provisioner": {"remote-exec": {"script": {"concat": [
+                    "path.module",
+                    {"literal": "/provision-docker.sh"},
+                ]}}}},
+                {"provisioner": {"file": [
+                    {"source": {"concat": [
+                        "path.module",
+                        {"literal": "/provision-swap.sh"},
+                    ]}},
+                    {"destination": {"concat": [
+                        {"literal": "/home/"},
+                        "var.ssh_username",
+                        {"literal": "/provision-swap.sh"},
+                    ]}},
+                ]}},
+                {"provisioner": {"remote-exec": {"inline": [
+                    {"concat": [
+                        {"literal": "sh /home/"},
+                        "var.ssh_username",
+                        {"literal": "/provision-swap.sh "},
+                        "var.swap_file_size",
+                        {"literal": " "},
+                        "var.swap_swappiness",
                     ]},
-                    {"provisioner": [
-                        {"literal": "remote-exec"},
-                        {
-                            "name": "inline",
-                            "value": [
-                                {"concat": [
-                                    {"literal": "sh /home/"},
-                                    "var.ssh_username",
-                                    {"literal": "/provision-swap.sh "},
-                                    "var.swap_file_size",
-                                    {"literal": " "},
-                                    "var.swap_swappiness",
-                                ]},
-                                {"concat": [
-                                    {"literal": "rm /home/"},
-                                    "var.ssh_username",
-                                    {"literal": "/provision-swap.sh"},
-                                ]},
-                            ],
-                        },
+                    {"concat": [
+                        {"literal": "rm /home/"},
+                        "var.ssh_username",
+                        {"literal": "/provision-swap.sh"},
                     ]},
-                ],
-                "resource": {"literal": "aws_instance"},
-                "type": "resource",
-            },
-            {
-                "name": {"literal": "this"},
-                "params": [
-                    {
-                        "name": "count",
-                        "value": {"if_then_else": [
-                            {"eq": ["var.data_volume_id", {"literal": ""}]},
-                            "0",
-                            "1",
-                        ]},
-                    },
-                    {"name": "device_name", "value": {"literal": "/dev/xvdh"}},
-                    {"name": "instance_id", "value": "aws_instance.this.id"},
-                    {"name": "volume_id", "value": "var.data_volume_id"},
-                ],
-                "resource": {"literal": "aws_volume_attachment"},
-                "type": "resource",
-            },
-            {
-                "name": {"literal": "provisioners"},
-                "params": [
-                    {
-                        "name": "count",
-                        "value": {"if_then_else": [
-                            {"eq": ["var.data_volume_id", {"literal": ""}]},
-                            "0",
-                            "1",
-                        ]},
-                    },
-                    {
-                        "name": "depends_on",
-                        "value": {"literal": "aws_volume_attachment.this"},
-                    },
-                    {
-                        "name": "connection",
-                        "value": [
-                            {"name": "host", "value": "aws_instance.this.public_ip"},
-                            {"name": "user", "value": "var.ssh_username"},
-                            {
-                                "name": "private_key",
-                                "value": {"file": "var.ssh_private_key_path"},
-                            },
-                            {"name": "agent", "value": "false"},
-                        ],
-                    },
-                    {"provisioner": [
-                        {"literal": "remote-exec"},
-                        {
-                            "name": "script",
-                            "value": {"concat": [
-                                "path.module",
-                                {"literal": "/provision-ebs.sh"},
-                            ]},
-                        },
-                    ]},
-                    {"provisioner": [
-                        {"literal": "remote-exec"},
-                        {"name": "when", "value": {"literal": "destroy"}},
-                        {
-                            "name": "inline",
-                            "value": {"concat": [
-                                {"literal": "sudo umount -v "},
-                                "aws_volume_attachment.this.device_name",
-                            ]},
-                        },
-                    ]},
-                ],
-                "resource": {"literal": "null_resource"},
-                "type": "resource",
-            },
+                ]}}},
+            ]}},
+            {"aws_volume_attachment": {"this": [
+                {"count": {"if_then_else": [
+                    {"eq": ["var.data_volume_id", {"literal": ""}]},
+                    "0",
+                    "1",
+                ]}},
+                {"device_name": {"literal": "/dev/xvdh"}},
+                {"instance_id": "aws_instance.this.id"},
+                {"volume_id": "var.data_volume_id"},
+            ]}},
+            {"null_resource": {"provisioners": [
+                {"count": {"if_then_else": [
+                    {"eq": ["var.data_volume_id", {"literal": ""}]},
+                    "0",
+                    "1",
+                ]}},
+                {"depends_on": {"literal": "aws_volume_attachment.this"}},
+                {"connection": [
+                    {"host": "aws_instance.this.public_ip"},
+                    {"user": "var.ssh_username"},
+                    {"private_key": {"file": "var.ssh_private_key_path"}},
+                    {"agent": "false"},
+                ]},
+                {"provisioner": {"remote-exec": {"script": {"concat": [
+                    "path.module",
+                    {"literal": "/provision-ebs.sh"},
+                ]}}}},
+                {"provisioner": {"remote-exec": [
+                    {"when": {"literal": "destroy"}},
+                    {"inline": {"concat": [
+                        {"literal": "sudo umount -v "},
+                        "aws_volume_attachment.this.device_name",
+                    ]}},
+                ]}},
+            ]}},
         ]
         self.assertEqual(result, expected)
+
+    def test_variables(self):
+        content = File("tests/examples/aws/aws_ec2_ebs_docker_host/variables.tf").read()
+        result = parse(content)
+        expect = [
+            {"local": {"reprovision_trigger": {"concat": [
+                {"literal": "\n    # Trigger reprovision on variable changes:\n    "},
+                "var.hostname",
+                {"literal": "\n    "},
+                "var.ssh_username",
+                {"literal": "\n    "},
+                "var.ssh_private_key_path",
+                {"literal": "\n    "},
+                "var.ssh_public_key_path",
+                {"literal": "\n    "},
+                "var.swap_file_size",
+                {"literal": "\n    "},
+                "var.swap_swappiness",
+                {"literal": "\n    "},
+                "var.reprovision_trigger",
+                {"literal": "\n    # Trigger reprovision on file changes:\n    "},
+                {"file": {"concat": [
+                    "path.module",
+                    {"literal": "/provision-docker.sh"},
+                ]}},
+                {"literal": "\n    "},
+                {"file": {"concat": ["path.module", {"literal": "/provision-ebs.sh"}]}},
+                {"literal": "\n    "},
+                {"file": {"concat": [
+                    "path.module",
+                    {"literal": "/provision-swap.sh"},
+                ]}},
+                {"literal": "\n  "},
+            ]}}},
+            {"local": {"availability_zone": {"get": [
+                "data.aws_availability_zones.this.names",
+                "0",
+            ]}}},
+            {"var": {"hostname": [
+                {"description": {
+                    "literal": (
+                        "Hostname by which this service is identified in metrics,"
+                        " logs etc"
+                    )
+                }},
+                {"default": {"literal": "aws-ec2-ebs-docker-host"}},
+            ]}},
+            {"var": {"instance_type": [
+                {"description": {
+                    "literal": (
+                        "See https://aws.amazon.com/ec2/instance-types/ for options;"
+                        " for example, typical values for small workloads are"
+                        ' `"t2.nano"`, `"t2.micro"`, `"t2.small"`, `"t2.medium"`, and'
+                        ' `"t2.large"`'
+                    )
+                }},
+                {"default": {"literal": "t2.micro"}},
+            ]}},
+            {"var": {"instance_ami": [
+                {"description": {
+                    "literal": (
+                        "See https://cloud-images.ubuntu.com/locator/ec2/ for options"
+                    )
+                }},
+                {"default": {"literal": "ami-0bdf93799014acdc4"}},
+            ]}},
+            {"var": {"ssh_private_key_path": [
+                {"description": {
+                    "literal": (
+                        "SSH private key file path, relative to Terraform project root"
+                    )
+                }},
+                {"default": {"literal": "ssh.private.key"}},
+            ]}},
+            {"var": {"ssh_public_key_path": [
+                {"description": {
+                    "literal": (
+                        "SSH public key file path, relative to Terraform project root"
+                    )
+                }},
+                {"default": {"literal": "ssh.public.key"}},
+            ]}},
+            {"var": {"ssh_username": [
+                {"description": {
+                    "literal": (
+                        "Default username built into the AMI (see 'instance_ami')"
+                    )
+                }},
+                {"default": {"literal": "ubuntu"}},
+            ]}},
+            {"var": {"vpc_id": [
+                {"description": {
+                    "literal": (
+                        "ID of the VPC our host should join; if empty, joins your"
+                        " Default VPC"
+                    )
+                }},
+                {"default": {"literal": ""}},
+            ]}},
+            {"var": {"reprovision_trigger": [
+                {"description": {
+                    "literal": (
+                        "An arbitrary string value; when this value changes, the host"
+                        " needs to be reprovisioned"
+                    )
+                }},
+                {"default": {"literal": ""}},
+            ]}},
+            {"var": {"root_volume_size": [
+                {"description": {
+                    "literal": (
+                        "Size (in GiB) of the EBS volume that will be created and"
+                        " mounted as the root fs for the host"
+                    )
+                }},
+                {"default": "8"},
+            ]}},
+            {"var": {"data_volume_id": [
+                {"description": {
+                    "literal": "The ID of the EBS volume to mount as `/data`"
+                }},
+                {"default": {"literal": ""}},
+            ]}},
+            {"var": {"swap_file_size": [
+                {"description": {
+                    "literal": "Size of the swap file allocated on the root volume"
+                }},
+                {"default": {"literal": "512M"}},
+            ]}},
+            {"var": {"swap_swappiness": [
+                {"description": {
+                    "literal": "Swappiness value provided when creating the swap file"
+                }},
+                {"default": {"literal": "10"}},
+            ]}},
+            {"var": {"allow_incoming_http": [
+                {"description": {
+                    "literal": (
+                        "Whether to allow incoming HTTP traffic on the host security"
+                        " group"
+                    )
+                }},
+                {"default": "false"},
+            ]}},
+            {"var": {"allow_incoming_https": [
+                {"description": {
+                    "literal": (
+                        "Whether to allow incoming HTTPS traffic on the host security"
+                        " group"
+                    )
+                }},
+                {"default": "false"},
+            ]}},
+            {"var": {"allow_incoming_dns": [
+                {"description": {
+                    "literal": (
+                        "Whether to allow incoming DNS traffic on the host security"
+                        " group"
+                    )
+                }},
+                {"default": "false"},
+            ]}},
+            {"var": {"tags": [
+                {"description": {
+                    "literal": (
+                        "AWS Tags to add to all resources created (where possible); see"
+                        " https://aws.amazon.com/answers/account-management/aws-tagging-strategies/"
+                    )
+                }},
+                {"type": {"literal": "map"}},
+                {"default": {"literal": {}}},
+            ]}},
+        ]
+        self.assertEqual(result, expect)
+
+    def test_lambda(self):
+        content = File("tests/examples/aws/aws_lambda_api/main.tf").read()
+        result = parse(content)
+        expect = [
+            {"aws_lambda_function": {"local_zipfile": [
+                {"count": {"if_then_else": [
+                    {"eq": ["var.function_s3_bucket", {"literal": ""}]},
+                    "1",
+                    "0",
+                ]}},
+                {"filename": "var.function_zipfile"},
+                {"source_code_hash": {"if_then_else": [
+                    {"eq": ["var.function_s3_bucket", {"literal": ""}]},
+                    {"base64sha256": {"file": "var.function_zipfile"}},
+                    {"literal": ""},
+                ]}},
+                {"description": {"concat": ["var.comment_prefix", "var.api_domain"]}},
+                {"function_name": "local.prefix_with_domain"},
+                {"handler": "var.function_handler"},
+                {"runtime": "var.function_runtime"},
+                {"timeout": "var.function_timeout"},
+                {"memory_size": "var.memory_size"},
+                {"role": "aws_iam_role.this.arn"},
+                {"tags": "var.tags"},
+                {"environment": {"variables": "var.function_env_vars"}},
+            ]}},
+            {"aws_lambda_function": {"s3_zipfile": [
+                {"count": {"if_then_else": [
+                    {"eq": ["var.function_s3_bucket", {"literal": ""}]},
+                    "0",
+                    "1",
+                ]}},
+                {"s3_bucket": "var.function_s3_bucket"},
+                {"s3_key": "var.function_zipfile"},
+                {"description": {"concat": ["var.comment_prefix", "var.api_domain"]}},
+                {"function_name": "local.prefix_with_domain"},
+                {"handler": "var.function_handler"},
+                {"runtime": "var.function_runtime"},
+                {"timeout": "var.function_timeout"},
+                {"memory_size": "var.memory_size"},
+                {"role": "aws_iam_role.this.arn"},
+                {"tags": "var.tags"},
+                {"environment": {"variables": "var.function_env_vars"}},
+            ]}},
+            {"local": [
+                {"function_id": {"concat": [
+                    {"element": [
+                        {"concat": [
+                            "aws_lambda_function.local_zipfile.*.id",
+                            {"list": {"literal": ""}},
+                        ]},
+                        "0",
+                    ]},
+                    {"element": [
+                        {"concat": [
+                            "aws_lambda_function.s3_zipfile.*.id",
+                            {"list": {"literal": ""}},
+                        ]},
+                        "0",
+                    ]},
+                ]}},
+                {"function_arn": {"concat": [
+                    {"element": [
+                        {"concat": [
+                            "aws_lambda_function.local_zipfile.*.arn",
+                            {"list": {"literal": ""}},
+                        ]},
+                        "0",
+                    ]},
+                    {"element": [
+                        {"concat": [
+                            "aws_lambda_function.s3_zipfile.*.arn",
+                            {"list": {"literal": ""}},
+                        ]},
+                        "0",
+                    ]},
+                ]}},
+                {"function_invoke_arn": {"concat": [
+                    {"element": [
+                        {"concat": [
+                            "aws_lambda_function.local_zipfile.*.invoke_arn",
+                            {"list": {"literal": ""}},
+                        ]},
+                        "0",
+                    ]},
+                    {"element": [
+                        {"concat": [
+                            "aws_lambda_function.s3_zipfile.*.invoke_arn",
+                            {"list": {"literal": ""}},
+                        ]},
+                        "0",
+                    ]},
+                ]}},
+            ]},
+        ]
+        self.assertEqual(result, expect)
 
     def test_examples(self):
         def parser(text, attachments) -> Data:
             try:
-                parse(text)
+                return parse(text)
             except Exception as cause:
                 logger.warning(
                     "Could not parse {{file}}", file=attachments["file"], cause=cause
@@ -342,4 +476,4 @@ class TestExamples(FuzzyTestCase):
             .to_list()
         )
 
-        print(result)
+        self.assertTrue(all(exists(r) for r in result))

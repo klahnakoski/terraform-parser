@@ -366,8 +366,7 @@ class ParserElement(object):
     def add_parse_action(self, *fns, callDuringTry=False):
         """
         Add one or more parse actions to expression's list of parse actions. See `setParseAction`.
-
-        See examples in `copy`.
+        Also you can use `/`
         """
         output = self.copy()
         output.parse_action += list(map(wrap_parse_action, fns))
@@ -381,7 +380,11 @@ class ParserElement(object):
         Shortform for add_parse_action
         """
         output = self.copy()
-        output.parse_action.append(wrap_parse_action(func))
+        if isinstance(func, (str, int, float)):
+            # REPLACE WITH CONSTANT
+            output.parse_action.append(lambda t, i, s: ParseResults(t.type, t.start, t.end, [func], []))
+        else:
+            output.parse_action.append(wrap_parse_action(func))
         return output
 
     def add_condition(self, *fns, message=None, callDuringTry=False, fatal=False):

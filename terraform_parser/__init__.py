@@ -24,8 +24,10 @@ with whitespaces.NO_WHITESPACE:
     identifier = Regex(r"\w+")
     quote = Literal('"').suppress()
     code = Literal("${").suppress() + expression + Literal("}").suppress()
-    simple_string = Regex(r"(\\\"|\$[^{]|[^\"$])+") / to_string
-    string = Group(quote + ZeroOrMore(simple_string | code) + quote) / to_concat
+    string_segment = Regex(r"(\\\"|\$[^{]|[^\"$])+") / to_string
+    compound_string = (
+        Group(quote + ZeroOrMore(string_segment | code) + quote) / to_concat
+    )
     multiline_string = Regex(r"(\$[^{]|[^$])+") / to_multiline_string
     multiline_string_parser = ZeroOrMore(multiline_string | code).finalize()
 
@@ -39,7 +41,7 @@ with whitespaces.NO_WHITESPACE:
         Literal("<<").suppress() + SkipTo(CR)("end") / eod_parser + rest
     ) / to_multiline
 
-    path = delimited_list(identifier, ".", combine=True)
+    path = delimited_list(identifier|"*", ".", combine=True)
 
 comment = Literal("#").suppress() + SkipTo(CR)
 
@@ -52,20 +54,20 @@ multiline_white.add_ignore(comment)
 json = Forward()
 
 with white:
-    assignment = identifier("name") / to_var + ("=" + compound("value") | json("value"))
-    property = string("name") / to_name + ("=" + compound("value") | json("value"))
-    provisioner = (
-        keyword("provisioner")("op") + string("params") + json("params")
-    ) / to_json_call
+    assignment = identifier + Group(ASSIGN + compound | json)
+
+    property = compound_string + Group(ASSIGN + compound | json)
+    provisioner = Keyword("provisioner") + compound_string + json
 
     assignments = delimited_list(
-        Group(provisioner | assignment | property), separator=OneOrMore(CR)
+        Group(provisioner | assignment | property)/to_inner_object, separator=OneOrMore(CR)
     )
+    dynamic_accessor = LB + expression + RB
 
 with multiline_white:
-    json << LC + Optional(assignments) + RC
+    json << LC + Optional(Group(assignments)) + RC
     compound << (
-        string
+        compound_string
         | LB + delimited_list(expression | Empty()) + RB
         | json
         | multiline
@@ -77,7 +79,8 @@ with multiline_white:
     expression << (
         infix_notation(
             compound,
-            [
+            [(dynamic_accessor, 1, LEFT_ASSOC, to_offset)]
+            + [
                 (
                     o,
                     1 if o in unary_ops else (3 if isinstance(o, tuple) else 2),
@@ -90,13 +93,21 @@ with multiline_white:
         / to_code
     )
 
-    tf_type = Keyword("data") | Keyword("resource")
     resource = (
-        tf_type("type") + string("resource") + string("name") + json("params")
-    ) / dict
-    module = (identifier("type") + string("name") + json("params")) / dict
+        Keyword("resource").suppress() + compound_string + compound_string + json("params")
+    ) / to_inner_object
+    data = (
+        Keyword("data") + compound_string + compound_string + json
+    ) / to_inner_object
+    module = (Keyword("module").suppress() + compound_string + json) / to_inner_object
 
-    terraform = ZeroOrMore(resource | module)
+    # module = (identifier("type") + string("name") + json("params")) / dict
+    variable = (
+        Keyword("variable") / "var" + compound_string + json("params")
+    ) / to_inner_object
+    local = (Keyword("locals") / "local" + json("params")) / to_inner_object
+
+    terraform = ZeroOrMore(resource | data | module | variable | local)
 
 set_parser_names()
 

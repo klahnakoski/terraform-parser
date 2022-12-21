@@ -36,6 +36,7 @@ EQ = Literal("==").set_parser_name("neq")
 NEQ = (Literal("!=") | Literal("<>")).set_parser_name("neq")
 THEN = Literal("?").set_parser_name("if_then_else")
 ELSE = Literal(":")
+ASSIGN = Literal("=").suppress()
 
 KNOWN_OPS = [
     CONCAT,

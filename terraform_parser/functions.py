@@ -69,6 +69,26 @@ def to_name(tokens):
     return tokens[0]["literal"]
 
 
+def to_inner_object(tokens):
+    items = list(tokens)
+    prev = items[-1]
+    for v in reversed(items[:-1]):
+        while isinstance(v, ParseResults):
+            v = v[0]
+        if isinstance(v, dict):
+            if "literal" in v:
+                v = v['literal']
+            else:
+                print("hi")
+        prev = {v: prev}
+    return prev
+
+
+def to_offset(tokens):
+    expr, offset = tokens.tokens
+    return Call("get", [expr, *offset], {})
+
+
 def to_json_call(tokens):
     # ARRANGE INTO {op: params} FORMAT
     op = tokens["op"].lower()
