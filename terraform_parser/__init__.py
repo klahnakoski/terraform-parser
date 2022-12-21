@@ -10,16 +10,14 @@
 from mo_dots import Data
 from mo_imports import export
 
-from mo_parsing import whitespaces, Whitespace
-
 from mo_parsing import *
+from mo_parsing import whitespaces, Whitespace
 from terraform_parser.functions import *
-from terraform_parser.keywords import unary_ops, KNOWN_OPS
-from terraform_parser.utils import scrub
+from terraform_parser.keywords import *
+from terraform_parser.utils import scrub, keyword
 
 expression = Forward()
 compound = Forward()
-
 
 with whitespaces.NO_WHITESPACE:
     CR = Regex(r"\n")
@@ -51,39 +49,51 @@ white.add_ignore(comment)
 multiline_white = Whitespace()
 multiline_white.add_ignore(comment)
 
+json = Forward()
 
 with white:
-    assignment = identifier("name") / to_var + "=" + compound("value")
-    property = string("name") / to_name + "=" + compound("value")
-    assignments = (
-        delimited_list(assignment | property, separator=OneOrMore(CR)) / to_assign
+    assignment = identifier("name") / to_var + ("=" + compound("value") | json("value"))
+    property = string("name") / to_name + ("=" + compound("value") | json("value"))
+    provisioner = (
+        keyword("provisioner")("op") + string("params") + json("params")
+    ) / to_json_call
+
+    assignments = delimited_list(
+        Group(provisioner | assignment | property), separator=OneOrMore(CR)
     )
 
-
 with multiline_white:
-    json = Literal("{").suppress() + Optional(assignments) + Literal("}").suppress()
-
+    json << LC + Optional(assignments) + RC
     compound << (
-        string | "[" + delimited_list(expression) + "]" | json | multiline | path
+        string
+        | LB + delimited_list(expression | Empty()) + RB
+        | json
+        | multiline
+        | (identifier("op") + LP + delimited_list(expression("params")) + RP)
+        / to_json_call
+        | path
     )
 
     expression << (
         infix_notation(
-            compound, [
-                        (
-                            o,
-                            1 if o in unary_ops else (3 if isinstance(o, tuple) else 2),
-                            unary_ops.get(o, LEFT_ASSOC),
-                            to_json_operator,
-                        )
-                        for o in KNOWN_OPS
-                    ],
+            compound,
+            [
+                (
+                    o,
+                    1 if o in unary_ops else (3 if isinstance(o, tuple) else 2),
+                    unary_ops.get(o, LEFT_ASSOC),
+                    to_json_operator,
+                )
+                for o in KNOWN_OPS
+            ],
         )
         / to_code
     )
 
-    tf_type = (Keyword("data") | Keyword("resource"))
-    resource = (tf_type("type") + string("resource") + string("name") + json("params")) / dict
+    tf_type = Keyword("data") | Keyword("resource")
+    resource = (
+        tf_type("type") + string("resource") + string("name") + json("params")
+    ) / dict
     module = (identifier("type") + string("name") + json("params")) / dict
 
     terraform = ZeroOrMore(resource | module)

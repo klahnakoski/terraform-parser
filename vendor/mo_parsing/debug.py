@@ -72,12 +72,7 @@ def _debug_parse(debugger):
 
 def _try(expr, start, string):
     print(
-        "  Attempt "
-        + quote(string, start)
-        + " at loc "
-        + text(start)
-        + "(%d,%d)" % (lineno(start, string), col(start, string))
-        + " for "
+        f"  Attempt {quote(string, start)} at loc {start} ({lineno(start, string)},{col(start, string)}) for "
         + " " * stack_depth()
         + text(expr)[:300]
     )
@@ -85,14 +80,9 @@ def _try(expr, start, string):
 
 def match(expr, start, end, string, tokens):
     print(
-        "> Matched "
-        + quote(string[start:end])
-        + "between "
-        + f"[{start}, {end}] for"
+        f"> Matched {quote(string[start:end])}between [({lineno(start, string)},{col(start, string)}), length={end-start}] for"
         + " " * stack_depth()
-        + text(expr)
-        + " -> "
-        + str(tokens)
+        + f"{expr} -> {tokens}"
     )
 
 
