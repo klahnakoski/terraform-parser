@@ -454,6 +454,73 @@ class TestExamples(FuzzyTestCase):
         ]}}}}
         self.assertEqual(result, expect)
 
+    def test_multiline_expression(self):
+        content = File("tests/examples/aws/aws_vpc_msk/vpc.tf").read()
+        result = parse(content)
+        expect = {"aws_vpc": {"msk_vpc": [
+            {"cidr_block": "var.vpc_cidr"},
+            {"tags": {"merge": [
+                "local.common-tags",
+                {"map": [
+                    {"literal": "Name"},
+                    {"concat": [
+                        {"literal": "msk-"},
+                        {"lower": "var.environment"},
+                        {"literal": "-vpc"},
+                    ]},
+                    {"literal": "Description"},
+                    {"literal": "VPC for creating MSK resources"},
+                ]},
+            ]}},
+        ]}}
+        self.assertEqual(result, expect)
+
+    def test_terraform(self):
+        content = """terraform {
+          backend "s3" {
+            bucket = "mybucket"
+            key    = "wordpress"
+          }
+        }"""
+        result = parse(content)
+        expect = {"terraform": {"backend": {"s3": [
+            {"bucket": {"literal": "mybucket"}},
+            {"key": {"literal": "wordpress"}},
+        ]}}}
+        self.assertEqual(result, expect)
+
+    def test_multiline_parameter(self):
+        content = """
+        resource "google_bigquery_table" "control_range_view" {
+          view {
+            query = templatefile("${path.module}/sql/control_range_view.sql", {
+                  NAME = element(local.control_fields, count.index),
+                  DEFAULT = element(local.default_value, count.index)
+                  OPERATIONS = ""
+            })
+          }
+        }"""
+        result = parse(content)
+        expect = {
+            "google_bigquery_table": {
+                "control_range_view": {"view": {"query": {"templatefile": [
+                    {"concat": [
+                        "path.module",
+                        {"literal": "/sql/control_range_view.sql"},
+                    ]},
+                    [
+                        {"NAME": {"element": ["local.control_fields", "count.index"]}},
+                        {"DEFAULT": {"element": [
+                            "local.default_value",
+                            "count.index",
+                        ]}},
+                        {"OPERATIONS": {"literal": ""}},
+                    ],
+                ]}}}
+            }
+        }
+        self.assertEqual(result, expect)
+
     def test_examples(self):
         def parser(text, attachments) -> Data:
             try:
@@ -471,5 +538,3 @@ class TestExamples(FuzzyTestCase):
             .map(parser)
             .to_list()
         )
-
-        self.assertTrue(all(exists(r) for r in result))

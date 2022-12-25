@@ -73,7 +73,7 @@ def _debug_parse(debugger):
 
 def _try(expr, start, string):
     global _max_preamble
-    preamble = f"  Attempt {quote(string, start)} at loc {start} ({lineno(start, string)},{col(start, string)}) "
+    preamble = f"  Attempt {quote(string, start)} at loc ({lineno(start, string)},{col(start, string)}), index={start}"
     length = len(preamble)
     _max_preamble = max(_max_preamble, length)
     print(

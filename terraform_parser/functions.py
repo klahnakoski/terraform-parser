@@ -11,9 +11,9 @@ import json
 
 from mo_imports import expect
 
-from mo_parsing import ParseResults, Forward, Group, is_number
+from mo_parsing import ParseResults, Forward, Group, is_number, Keyword
 from terraform_parser.keywords import binary_ops
-from terraform_parser.utils import SQL_NULL, Call
+from terraform_parser.utils import SQL_NULL, Call, And
 
 multiline_string_parser = expect("multiline_string_parser")
 
@@ -23,6 +23,12 @@ def first(values):
         return values[0]
     else:
         return values
+
+
+def keyword(keywords):
+    return And([
+        Keyword(k, caseless=True) for k in keywords.split(" ")
+    ]).set_parser_name(keywords) / (lambda: keywords.replace(" ", "_"))
 
 
 def to_string(tokens):

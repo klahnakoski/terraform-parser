@@ -16,6 +16,7 @@ FALSE = keyword("false") / (lambda: False)
 LP, RP = Literal("(").suppress(), Literal(")").suppress()
 LB, RB = Literal("[").suppress(), Literal("]").suppress()
 LC, RC = Literal("{").suppress(), Literal("}").suppress()
+COMMA = Literal(",").suppress()
 
 CONCAT = Literal("||").set_parser_name("concat")
 MUL = Literal("*").set_parser_name("mul")

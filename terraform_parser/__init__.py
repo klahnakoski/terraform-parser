@@ -18,12 +18,12 @@ from terraform_parser.utils import scrub, keyword
 
 expression = Forward()
 compound = Forward()
+code = Forward()
 
 with whitespaces.NO_WHITESPACE:
     CR = Regex(r"\n")
     identifier = Regex(r"[\w](\[\d+\]|[-\w])*")
     quote = Literal('"').suppress()
-    code = Literal("${").suppress() + expression + Literal("}").suppress()
     string_segment = Regex(r"(\\\"|\$[^{]|[^\"$])+") / to_string
     compound_string = (
         Group(quote + ZeroOrMore(string_segment | code) + quote) / to_concat
@@ -38,12 +38,16 @@ with whitespaces.NO_WHITESPACE:
         rest << (SkipTo(eod)("content") / multiline_content) + eod.suppress()
 
     multiline = (
-        Literal("<<").suppress() + SkipTo(CR)("end") / eod_parser + rest
+        Literal("<<").suppress()+Optional("-").suppress() + SkipTo(CR)("end") / eod_parser + rest
     ) / to_multiline
 
-    path = delimited_list(identifier|"*", ".", combine=True)
+    path = delimited_list(identifier | "*", ".", combine=True)
 
-    comment = Literal("#").suppress() + SkipTo(CR) | "/*"+SkipTo("*/", include=True)
+    comment = (
+        Literal("#").suppress() + SkipTo(CR)
+        | "/*" + SkipTo("*/", include=True)
+        | Literal("//").suppress() + SkipTo(CR)
+    )
 
 single_line_white = Whitespace(white="\t ")
 single_line_white.add_ignore(comment)
@@ -56,21 +60,31 @@ json = Forward()
 with single_line_white:
     assignment = identifier + Group(ASSIGN + expression)
     property = compound_string + Group(ASSIGN + expression)
-    provisioner = Keyword("provisioner") + compound_string + json
+    sub_resource = (keyword("provisioner") | keyword("backend")) + compound_string + json
+
     assignments = delimited_list(
-        Group(provisioner | assignment | property)/to_inner_object, separator=OneOrMore(CR)
+        Group(sub_resource | assignment | property) / to_inner_object,
+        separator=OneOrMore(CR|COMMA),
     )
     dynamic_accessor = LB + expression + RB
     simple_accessor = Literal(".").suppress() + identifier / to_literal
 
 with multiline_white:
     json << LC + Optional(Group(assignments)) + RC
+    code << Literal("${").suppress() + expression + Literal("}").suppress()
+
     compound << (
         compound_string
-        | LB + delimited_list(expression | Empty()) + RB
+        | LB + delimited_list(expression) + Optional(COMMA) + RB
         | json
         | multiline
-        | (identifier("op") + LP + delimited_list(expression("params")) + RP)
+        | (
+            identifier("op")
+            + LP
+            + delimited_list(expression("params"))
+            + Optional(COMMA)
+            + RP
+        )
         / to_json_call
         | real_num
         | int_num
@@ -80,9 +94,10 @@ with multiline_white:
     expression << (
         infix_notation(
             compound,
-            [(dynamic_accessor, 1, LEFT_ASSOC, to_offset),
-             (simple_accessor, 1, LEFT_ASSOC, to_offset,),
-             ]
+            [
+                (dynamic_accessor, 1, LEFT_ASSOC, to_offset),
+                (simple_accessor, 1, LEFT_ASSOC, to_offset,),
+            ]
             + [
                 (
                     o,
@@ -103,14 +118,18 @@ with multiline_white:
     variable = Keyword("variable") / "var" + compound_string + json
     output = Keyword("output") + compound_string + json
     local = Keyword("locals") / "local" + json
-    provider = Keyword("provider") +compound_string + json
-    terraform = ZeroOrMore((resource | data | module | variable | output | local | provider)/to_inner_object)
+    provider = Keyword("provider") + compound_string + json
+    terraform = keyword("terraform") + json
+    everything = ZeroOrMore(
+        (terraform | resource | data | module | variable | output | local | provider)
+        / to_inner_object
+    )
 
 set_parser_names()
 
 
 def parse(content) -> Data:
-    return scrub(terraform.parse(content, parse_all=True))
+    return scrub(everything.parse(content, parse_all=True))
 
 
 export("terraform_parser.functions", multiline_string_parser)
