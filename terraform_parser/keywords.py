@@ -7,7 +7,7 @@
 # Contact: Kyle Lahnakoski (kyle@lahnakoski.com)
 #
 # SIMPLE OPERATORS
-from mo_parsing import Literal, RIGHT_ASSOC, Regex
+from mo_parsing import Literal, RIGHT_ASSOC, Regex, Optional
 from terraform_parser.utils import keyword, SQL_NULL, set_parser_names
 
 NULL = keyword("null") / (lambda: SQL_NULL)
@@ -36,7 +36,7 @@ EQ = Literal("==").set_parser_name("neq")
 NEQ = (Literal("!=") | Literal("<>")).set_parser_name("neq")
 THEN = Literal("?").set_parser_name("if_then_else")
 ELSE = Literal(":")
-ASSIGN = Literal("=").suppress()
+ASSIGN = Optional(Literal("=")).suppress()
 
 KNOWN_OPS = [
     CONCAT,

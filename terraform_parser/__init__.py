@@ -45,17 +45,17 @@ with whitespaces.NO_WHITESPACE:
 
     comment = Literal("#").suppress() + SkipTo(CR) | "/*"+SkipTo("*/", include=True)
 
-white = Whitespace(white="\t ")
-white.add_ignore(comment)
+single_line_white = Whitespace(white="\t ")
+single_line_white.add_ignore(comment)
 
 multiline_white = Whitespace()
 multiline_white.add_ignore(comment)
 
 json = Forward()
 
-with white:
-    assignment = identifier + Group(ASSIGN + compound | json)
-    property = compound_string + Group(ASSIGN + compound | json)
+with single_line_white:
+    assignment = identifier + Group(ASSIGN + expression)
+    property = compound_string + Group(ASSIGN + expression)
     provisioner = Keyword("provisioner") + compound_string + json
     assignments = delimited_list(
         Group(provisioner | assignment | property)/to_inner_object, separator=OneOrMore(CR)
@@ -96,15 +96,15 @@ with multiline_white:
         / to_code
     )
 
-    resource = Keyword("resource").suppress() + compound_string + compound_string + json("params")
+    resource = Keyword("resource").suppress() + compound_string + compound_string + json
     data = Keyword("data") + compound_string + compound_string + json
     module = Keyword("module").suppress() + compound_string + json
     # module = (identifier("type") + string("name") + json("params")) / dict
-    variable = Keyword("variable") / "var" + compound_string + json("params")
-    output = Keyword("output") + compound_string + json("params")
-    local = Keyword("locals") / "local" + json("params")
-
-    terraform = ZeroOrMore((resource | data | module | variable | output | local)/to_inner_object)
+    variable = Keyword("variable") / "var" + compound_string + json
+    output = Keyword("output") + compound_string + json
+    local = Keyword("locals") / "local" + json
+    provider = Keyword("provider") +compound_string + json
+    terraform = ZeroOrMore((resource | data | module | variable | output | local | provider)/to_inner_object)
 
 set_parser_names()
 

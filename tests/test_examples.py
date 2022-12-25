@@ -220,7 +220,9 @@ class TestExamples(FuzzyTestCase):
                 ]}},
                 {"literal": "\n  "},
             ]}}},
-            {"local": {"availability_zone":                "data.aws_availability_zones.this.names[0]"}},
+            {"local": {
+                "availability_zone": "data.aws_availability_zones.this.names[0]"
+            }},
             {"var": {"hostname": [
                 {"description": {
                     "literal": (
@@ -418,17 +420,39 @@ class TestExamples(FuzzyTestCase):
     def test_0_in_path(self):
         content = """output "host" {  name    = "${aws_acm_certificate.this.domain_validation_options.0.resource_record_name}"}"""
         result = parse(content)
-        expect = {"output": {"host": {"name": "aws_acm_certificate.this.domain_validation_options.0.resource_record_name"}}}
+        expect = {"output": {"host": {
+            "name": "aws_acm_certificate.this.domain_validation_options.0.resource_record_name"
+        }}}
         self.assertEqual(result, expect)
 
     def test_dot_accessor_in_path(self):
         content = """output "host" {  subnet_id = aws_subnet.private_subnet[1].id}"""
-        with Debugger():
-            result = parse(content)
+        result = parse(content)
         expect = {"output": {"host": {"subnet_id": "aws_subnet.private_subnet[1].id"}}}
         self.assertEqual(result, expect)
 
+    #  availability_zone = data.aws_availability_zones.available.names[count.index]
+    def test_expression_in_accessor(self):
+        content = """output "host" { availability_zone = data.aws_availability_zones.available.names[count.index] }"""
+        result = parse(content)
+        expect = {"output": {"host": {"availability_zone": {"get": [
+            "data.aws_availability_zones.available.names",
+            "count.index",
+        ]}}}}
+        self.assertEqual(result, expect)
 
+    def test_array(self):
+        content = """resource "aws_route53_record" "sending" {
+          records = [
+            "${lookup(mailgun_domain.this.sending_records[count.index], "value")}",
+          ]
+        }"""
+        result = parse(content)
+        expect = {"aws_route53_record": {"sending": {"records": {"lookup": [
+            {"get": ["mailgun_domain.this.sending_records", "count.index"]},
+            {"literal": "value"},
+        ]}}}}
+        self.assertEqual(result, expect)
 
     def test_examples(self):
         def parser(text, attachments) -> Data:
