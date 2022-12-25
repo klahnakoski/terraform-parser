@@ -5,7 +5,7 @@ Parse terraform scripts into JSON, including
 
 ## Status
 
-**Dec 2022** - This an experimental parser  
+**Dec 2022** - This an experimental parser that can parse the [futurice terraform-examples](https://github.com/futurice/terraform-examples)
 
 ## Problem
 
