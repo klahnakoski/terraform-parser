@@ -1,6 +1,6 @@
 # terraform-parser
 
-Parse terraform scripts for further processing
+Parse terraform scripts into JSON, including 
 
 
 ## Status

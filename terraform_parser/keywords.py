@@ -10,9 +10,9 @@
 from mo_parsing import Literal, RIGHT_ASSOC, Regex, Optional
 from terraform_parser.utils import keyword, SQL_NULL, set_parser_names
 
-NULL = keyword("null") / (lambda: SQL_NULL)
-TRUE = keyword("true") / (lambda: True)
-FALSE = keyword("false") / (lambda: False)
+NULL = keyword("null") / SQL_NULL
+TRUE = keyword("true") / True
+FALSE = keyword("false") / False
 LP, RP = Literal("(").suppress(), Literal(")").suppress()
 LB, RB = Literal("[").suppress(), Literal("]").suppress()
 LC, RC = Literal("{").suppress(), Literal("}").suppress()

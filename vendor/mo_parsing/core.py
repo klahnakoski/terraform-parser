@@ -380,11 +380,11 @@ class ParserElement(object):
         Shortform for add_parse_action
         """
         output = self.copy()
-        if isinstance(func, (str, int, float)):
+        try:
+            output.parse_action.append(wrap_parse_action(func))
+        except:
             # REPLACE WITH CONSTANT
             output.parse_action.append(lambda t, i, s: ParseResults(t.type, t.start, t.end, [func], []))
-        else:
-            output.parse_action.append(wrap_parse_action(func))
         return output
 
     def add_condition(self, *fns, message=None, callDuringTry=False, fatal=False):
