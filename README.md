@@ -30,11 +30,15 @@ The hope is to
 
 * Look at what is done here - https://github.com/starhawking/python-terrascript
 
+
 Found some parsers!
 
 * https://github.com/virtuald/pyhcl
 * https://pypi.org/project/python-hcl2/
 
+
+Spec
+ * https://github.com/hashicorp/hcl/blob/main/hclsyntax/spec.md
 
 
 

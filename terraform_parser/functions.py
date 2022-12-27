@@ -87,6 +87,11 @@ def to_offset(tokens):
     return Call("get", [expr, *offset], {})
 
 
+def to_list(tokens):
+    expr, _ = list(tokens)
+    return Call("list", [expr], {})
+
+
 def to_json_call(tokens):
     # ARRANGE INTO {op: params} FORMAT
     op = tokens["op"].lower()

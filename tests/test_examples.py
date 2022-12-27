@@ -69,8 +69,8 @@ class TestExamples(FuzzyTestCase):
             {"data": {"aws_vpc": {"this": [
                 {"default": {"if_then_else": [
                     {"eq": ["var.vpc_id", {"literal": ""}]},
-                    "true",
-                    "false",
+                    True,
+                    False,
                 ]}},
                 {"id": "var.vpc_id"},
             ]}}},
@@ -105,7 +105,7 @@ class TestExamples(FuzzyTestCase):
                 {"connection": [
                     {"user": "var.ssh_username"},
                     {"private_key": {"file": "var.ssh_private_key_path"}},
-                    {"agent": "false"},
+                    {"agent": False},
                 ]},
                 {"provisioner": {"remote-exec": {"inline": [
                     {"concat": [
@@ -170,7 +170,7 @@ class TestExamples(FuzzyTestCase):
                     {"host": "aws_instance.this.public_ip"},
                     {"user": "var.ssh_username"},
                     {"private_key": {"file": "var.ssh_private_key_path"}},
-                    {"agent": "false"},
+                    {"agent": False},
                 ]},
                 {"provisioner": {"remote-exec": {"script": {"concat": [
                     "path.module",
@@ -327,7 +327,7 @@ class TestExamples(FuzzyTestCase):
                         " group"
                     )
                 }},
-                {"default": "false"},
+                {"default": False},
             ]}},
             {"var": {"allow_incoming_https": [
                 {"description": {
@@ -336,7 +336,7 @@ class TestExamples(FuzzyTestCase):
                         " group"
                     )
                 }},
-                {"default": "false"},
+                {"default": False},
             ]}},
             {"var": {"allow_incoming_dns": [
                 {"description": {
@@ -345,7 +345,7 @@ class TestExamples(FuzzyTestCase):
                         " group"
                     )
                 }},
-                {"default": "false"},
+                {"default": False},
             ]}},
             {"var": {"tags": [
                 {"description": {
@@ -519,6 +519,101 @@ class TestExamples(FuzzyTestCase):
                 ]}}}
             }
         }
+        self.assertEqual(result, expect)
+
+    def test_loop1(self):
+        content = """resource "a" "b" {
+          a = [for v in ["a", "b"]: v]
+        }"""
+        result = parse(content)
+        expect = {"a": {"b": {"a": {
+            "from": {
+                "from": [{"literal": "a"}, {"literal": "b"}],
+                "select": {"name": "v", "value": "index"},
+            },
+            "select": {"value": "v"},
+        }}}}
+        self.assertEqual(result, expect)
+
+    def test_loop2(self):
+        content = """resource "a" "b" {
+          a = [for v in ["a", "b"]: v],
+          b = [for i, v in ["a", "b"]: i],
+          c = {for i, v in ["a", "b"]: v => i},
+          d = {for i, v in ["a", "a", "b"]: v => i},
+          e = {for i, v in ["a", "a", "b"]: v => i...}
+          }"""
+        result = parse(content)
+        expect = {"a": {"b": [
+            {"a": {
+                "from": {
+                    "select": {"name": "v", "value": "index"},
+                    "from": [{"literal": "a"}, {"literal": "b"}],
+                },
+                "select": {"value": "v"},
+            }},
+            {"b": {
+                "from": {
+                    "select": [
+                        {"name": "i", "value": "index"},
+                        {"name": "v", "value": "value"},
+                    ],
+                    "from": [{"literal": "a"}, {"literal": "b"}],
+                },
+                "select": {"value": "i"},
+            }},
+            {"c": {"object": {
+                "from": {
+                    "select": [
+                        {"name": "i", "value": "index"},
+                        {"name": "v", "value": "value"},
+                    ],
+                    "from": [{"literal": "a"}, {"literal": "b"}],
+                },
+                "groupby": "v",
+                "select": "i",
+            }}},
+            {"d": {"object": {
+                "from": {
+                    "select": [
+                        {"name": "i", "value": "index"},
+                        {"name": "v", "value": "value"},
+                    ],
+                    "from": [{"literal": "a"}, {"literal": "a"}, {"literal": "b"}],
+                },
+                "groupby": "v",
+                "select": "i",
+            }}},
+            {"e": {"object": {
+                "from": {
+                    "select": [
+                        {"name": "i", "value": "index"},
+                        {"name": "v", "value": "value"},
+                    ],
+                    "from": [{"literal": "a"}, {"literal": "a"}, {"literal": "b"}],
+                },
+                "groupby": "v",
+                "select": {"list": "i"},
+            }}},
+        ]}}
+        self.assertEqual(result, expect)
+
+    def test_for_if(self):
+        content = """resource "a" "b" {
+           c = [for i, v in ["a", "b", "c"]: v if i < 2]
+        }"""
+        result = parse(content)
+        expect = {"a": {"b": {"c": {
+            "from": {
+                "select": [
+                    {"name": "i", "value": "index"},
+                    {"name": "v", "value": "value"},
+                ],
+                "from": [{"literal": "a"}, {"literal": "b"}, {"literal": "c"}],
+            },
+            "select": {"value": "v"},
+            "where": {"lt": ["i", 2]},
+        }}}}
         self.assertEqual(result, expect)
 
     def test_examples(self):

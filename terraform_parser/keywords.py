@@ -7,7 +7,7 @@
 # Contact: Kyle Lahnakoski (kyle@lahnakoski.com)
 #
 # SIMPLE OPERATORS
-from mo_parsing import Literal, RIGHT_ASSOC, Regex, Optional
+from mo_parsing import Literal, RIGHT_ASSOC, Regex, Optional, LEFT_ASSOC, Keyword
 from terraform_parser.utils import keyword, SQL_NULL, set_parser_names
 
 NULL = keyword("null") / SQL_NULL
@@ -36,8 +36,13 @@ GT = Literal(">").set_parser_name("gt")
 EQ = Literal("==").set_parser_name("neq")
 NEQ = (Literal("!=") | Literal("<>")).set_parser_name("neq")
 THEN = Literal("?").set_parser_name("if_then_else")
-ELSE = Literal(":")
+COLON = Literal(":")
 ASSIGN = Optional(Literal("=")).suppress()
+ELLIPSIS = Literal("...")
+FOR = Keyword("for")
+IN = Keyword("in")
+IF = Keyword("if")
+
 
 KNOWN_OPS = [
     CONCAT,
@@ -50,7 +55,7 @@ KNOWN_OPS = [
     BINARY_OR,
     GTE | LTE | LT | GT,
     EQ | NEQ,
-    (THEN, ELSE)
+    (THEN, COLON)
 ]
 
 
@@ -60,7 +65,6 @@ unary_ops = {
     BINARY_NOT: RIGHT_ASSOC,
 }
 
-keywords = TRUE | FALSE | NULL
 
 binary_ops = {
     "||": "concat",
@@ -85,5 +89,6 @@ binary_ops = {
 real_num = Regex(r"[+-]?(\d+\.\d*|\.\d+)([eE][+-]?\d+)?") / (lambda t: float(t[0]))
 int_num = Regex(r"[+-]?\d+") / (lambda t: int(t[0]))
 
+keywords = TRUE | FALSE | NULL | FOR | IN | IF
 
 set_parser_names()
