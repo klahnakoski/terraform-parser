@@ -77,6 +77,7 @@ with single_line_white:
         Group(sub_resource | assignment | property) / to_inner_object,
         separator=OneOrMore(CR | COMMA),
     )
+    splat_accessor = LB + "*" + RB
     dynamic_accessor = LB + expression + RB
     simple_accessor = Literal(".").suppress() + identifier / to_literal
 
@@ -150,6 +151,7 @@ with multiline_white:
         infix_notation(
             compound,
             [
+                (splat_accessor, 1, LEFT_ASSOC, to_splat),
                 (dynamic_accessor, 1, LEFT_ASSOC, to_offset),
                 (simple_accessor, 1, LEFT_ASSOC, to_offset),
                 (ELLIPSIS, 1, LEFT_ASSOC, to_list),

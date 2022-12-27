@@ -383,6 +383,14 @@ class TestExamples(FuzzyTestCase):
         ]}}}
         self.assertEqual(result, expect)
 
+    def test_splat2(self):
+        content = """locals {
+          function_id         =aws_lambda_function.local_zipfile[*].id
+        }"""
+        result = parse(content)
+        expect = {"local": {"function_id": {"from": "aws_lambda_function.local_zipfile", "select" : {"value": "id"}}}}
+        self.assertEqual(result, expect)
+
     def test_output(self):
         content = """output "hostname" {
           description = "Hostname by which this service is identified in metrics, logs etc"

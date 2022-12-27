@@ -9,6 +9,7 @@
 
 import json
 
+from mo_dots import is_many
 from mo_imports import expect
 
 from mo_parsing import ParseResults, Forward, Group, is_number, Keyword
@@ -82,8 +83,24 @@ def to_inner_object(tokens):
     return prev
 
 
+def to_splat(tokens):
+    expr, _ = tokens.tokens
+    return Call("from", [expr], {})
+
+
 def to_offset(tokens):
     expr, offset = tokens.tokens
+
+    if isinstance(expr, ParseResults) and isinstance(expr[0], Call):
+        call = expr[0]
+        if call.op == "from":
+            select = call.kwargs.setdefault("select", {})
+            value = select.get("value")
+            if not value:
+                select['value'] = offset[0]['literal']
+            else:
+                select['value'] = value + "." + offset[0]['literal']
+            return call
     return Call("get", [expr, *offset], {})
 
 
