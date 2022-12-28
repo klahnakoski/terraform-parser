@@ -4,9 +4,12 @@ Parse Terraform scripts into JSON
 
 ## Status
 
-**Dec 2022** - This an experimental parser that can parse the
+**Dec 2022** - This an experimental parser that can parse HCL2
 
 ## Problem
+
+Terraform scripting can be complex; 
+
 
 An application (or docker image, or lambda) is a black box to infrastructure: Services defined in infrastructure are communicated to the application as a set of environment variables.
 
@@ -17,6 +20,8 @@ We want to define services independently, in terraform, and then merge many serv
 * merge the application environment variables  
 
 ## Solution
+
+Most of the solution is to use terraform modules.  The remaining problem is 
 
 The hope is to 
 
