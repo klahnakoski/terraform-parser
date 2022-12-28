@@ -12,7 +12,7 @@ from mo_files import File
 from mo_imports import export
 
 from mo_future import first
-from mo_json import JxType
+from mo_json import JxType, JX_TEXT
 from mo_streams._utils import Stream, Reader
 from mo_streams.byte_stream import ByteStream
 from mo_streams.empty_stream import EmptyStream
