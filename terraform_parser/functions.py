@@ -53,18 +53,9 @@ def to_multiline(tokens):
     return list(multiline_string_parser.parse(tokens["content"]))
 
 
-def to_code(tokens):
-    return tokens
-
-
 def multiline_content(tokens, _, string):
     content = string[tokens.start : tokens.end]
     return content
-
-
-def if_else(tokens):
-    when, _, then, _, els_ = list(tokens)
-    return {"when": when, "then": then, "else": els_}
 
 
 def to_inner_object(tokens):
@@ -77,7 +68,7 @@ def to_inner_object(tokens):
             if "literal" in v:
                 v = v["literal"]
             else:
-                print("hi")
+                raise NotImplementedError("do not know what to do here")
         prev = {v: prev}
     return prev
 
@@ -191,7 +182,7 @@ def to_json_operator(tokens):
     operands = [tokens[0], tokens[2]]
     binary_op = Call(op, operands, {})
 
-    if op in {"add", "mul", "and", "or", "concat", "binary_and", "binary_or"}:
+    if op in {"add", "mul", "and", "or"}:
         # ASSOCIATIVE OPERATORS
         acc = []
         for operand in operands:
