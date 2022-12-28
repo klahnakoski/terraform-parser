@@ -15,7 +15,7 @@
     "include_package_data": true,
     "install_requires": [
            "mo-dots==9.300.22349", "mo-imports==7.298.22349", "mo-parsing==8.309.22362",
-        "mo-streams==1.324.22362"
+        "mo-streams==1.325.22362"
     ],
     "license": "MPL 2.0",
     "long_description": {
@@ -77,6 +77,6 @@
     "name": "terraform-parser",
     "packages": ["terraform_parser"],
     "url": "https://github.com/klahnakoski/terraform-parser",
-    "version": "0.324.22362",
+    "version": "0.325.22362",
     "zip_safe": false
 }
