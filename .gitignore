@@ -1,3 +1,6 @@
 .idea
 tests/examples
 .svn
+build
+*.egg-info
+__pycache__

@@ -1,4 +1,4 @@
 from terraform_parser import parse
 
 
-parse('resource "this" "is" {"terraform": {})')
+parse('resource "this" "is" {"terraform" = {}}')
