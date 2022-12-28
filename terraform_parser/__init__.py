@@ -11,26 +11,24 @@ from mo_dots import Data
 from mo_imports import export
 
 from mo_parsing import *
-from mo_parsing import whitespaces, Whitespace
+from mo_parsing.whitespaces import NO_WHITESPACE, Whitespace
 from terraform_parser.functions import *
 from terraform_parser.keywords import *
 from terraform_parser.utils import scrub, keyword
 
 expression = Forward()
 compound = Forward()
-code = Forward()
+template = Forward()
 
-with whitespaces.NO_WHITESPACE:
+with NO_WHITESPACE:
     CR = Regex(r"\n")
     identifier = Regex(r"[\w](\[\d+\]|[-\w])*")
     name = ~keywords + identifier
     quote = Literal('"').suppress()
-    string_segment = Regex(r"(\\\"|\$[^{]|[^\"$])+") / to_string
-    compound_string = (
-        Group(quote + ZeroOrMore(string_segment | code) + quote) / to_concat
-    )
-    multiline_string = Regex(r"(\$[^{]|[^$])+") / to_literal
-    multiline_string_parser = ZeroOrMore(multiline_string | code).finalize()
+    string_segment = Regex(r"(\\\"|\$\$\{|\%\%\{|\$[^{]|\%[^{]|[^\"$%])+") / to_string
+    compound_string = quote + template + quote
+    multiline_string = Regex(r"(\$\$\{|\%\%\{|\$[^{]|\%[^{]|[^$%])+") / to_multiline_string
+
 
     rest = Forward()
 
@@ -79,30 +77,29 @@ with single_line_white:
     )
     splat_accessor = LB + "*" + RB
     dynamic_accessor = LB + expression + RB
-    simple_accessor = Literal(".").suppress() + identifier / to_literal
+    simple_accessor = Literal(".").suppress() + identifier / to_multiline_string
 
 with multiline_white:
 
     object << LC + Optional(Group(assignments)) + RC
-    code << Literal("${").suppress() + expression + Literal("}").suppress()
     function_call = (
         name("op") + LP + delimited_list(expression("params")) + Optional(COMMA) + RP
     ) / to_json_call
 
+    for_preamble = FOR + (
+        (
+            Group(identifier / (lambda t: {"name": t[0], "value": "index"}))
+            + Optional(
+                COMMA + Group(identifier / (lambda t: {"name": t[0], "value": "value"}))
+            )
+        )("select")
+        + IN
+        + compound("from")
+    )("from")
+
     for_object = (
         LC
-        + FOR
-        + (
-            (
-                Group(identifier / (lambda t: {"name": t[0], "value": "index"}))
-                + Optional(
-                    COMMA
-                    + Group(identifier / (lambda t: {"name": t[0], "value": "value"}))
-                )
-            )("select")
-            + IN
-            + compound("from")
-        )("from")
+        + for_preamble
         + COLON
         + expression("groupby")
         + "=>"
@@ -110,25 +107,22 @@ with multiline_white:
         + Optional(IF + expression("where"))
         + RC
     )("object")
+
     for_tuple = (
         LB
-        + FOR
-        + (
-            (
-                Group(identifier / (lambda t: {"name": t[0], "value": "index"}))
-                + Optional(
-                    COMMA
-                    + Group(identifier / (lambda t: {"name": t[0], "value": "value"}))
-                )
-            )("select")
-            + IN
-            + compound("from")
-        )("from")
+        + for_preamble
         + COLON
         + Group(expression("value"))("select")
         + Optional(IF + expression("where"))
         + RB
     )
+
+    if_when = LPC + IF + expression("when") + RC
+    if_else = LPC + ELSE + RC
+    if_ends = LPC + Keyword("endif").suppress() + RC
+    basic_template = LDC + expression + RC
+    for_start = LPC + for_preamble + RC
+    for_end = LPC + Keyword("endfor").suppress() + RC
 
     compound << (
         NULL
@@ -185,7 +179,21 @@ with multiline_white:
         / to_inner_object
     )
 
+
+with NO_WHITESPACE:
+    if_template = Group(
+        (if_when + template("then")) /dict
+        + Optional(if_else + template)
+        + if_ends
+    )("case")
+    for_template = (for_start + Group(template("value"))("select") + for_end) / dict
+    code = basic_template | if_template | for_template
+    template << Group(ZeroOrMore(string_segment | code) / to_concat)
+    multiline_string_parser = Group(ZeroOrMore(multiline_string | code) / to_concat).finalize()
+
+
 set_parser_names()
+everything = everything.finalize()
 
 
 def parse(content) -> Data:

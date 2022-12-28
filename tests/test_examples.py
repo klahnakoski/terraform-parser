@@ -1,9 +1,8 @@
-from mo_dots import Data, exists
+from mo_dots import Data
 from mo_logs import logger
 from mo_testing.fuzzytestcase import FuzzyTestCase
 
 from mo_files import File
-from mo_parsing.debug import Debugger
 from mo_streams import it, stream
 from terraform_parser import parse
 
@@ -388,7 +387,10 @@ class TestExamples(FuzzyTestCase):
           function_id         =aws_lambda_function.local_zipfile[*].id
         }"""
         result = parse(content)
-        expect = {"local": {"function_id": {"from": "aws_lambda_function.local_zipfile", "select" : {"value": "id"}}}}
+        expect = {"local": {"function_id": {
+            "from": "aws_lambda_function.local_zipfile",
+            "select": {"value": "id"},
+        }}}
         self.assertEqual(result, expect)
 
     def test_output(self):
@@ -622,6 +624,47 @@ class TestExamples(FuzzyTestCase):
             "select": {"value": "v"},
             "where": {"lt": ["i", 2]},
         }}}}
+        self.assertEqual(result, expect)
+
+    def test_curly(self):
+        content = """resource "a" "b" {
+           c = "$${"
+        }"""
+        result = parse(content)
+        expect = {"a": {"b": {"c": {"literal": "${"}}}}
+        self.assertEqual(result, expect)
+
+    def test_for_template(self):
+        content = """resource "a" "b" {
+           c = "%{ for i, v in [true] }${i} = ${v}\\n%{ endfor }"
+        }"""
+        result = parse(content)
+        expect = {"a": {"b": {"c": {"concat": {
+            "from": {
+                "select": [
+                    {"name": "i", "value": "index"},
+                    {"name": "v", "value": "value"},
+                ],
+                "from": True,
+            },
+            "select": {"value": {"concat": [
+                "i",
+                {"literal": " = "},
+                "v",
+                {"literal": "\n"},
+            ]}},
+        }}}}}
+        self.assertEqual(result, expect)
+
+    def test_if_template(self):
+        content = """resource "a" "b" {
+           c = "%{if v} something %{else} nothing %{endif}"
+        }"""
+        result = parse(content)
+        expect = {"a": {"b": {"c": {"case": [
+            {"when": "v", "then": {"literal": " something "}},
+            {"literal": " nothing "},
+        ]}}}}
         self.assertEqual(result, expect)
 
     def test_examples(self):

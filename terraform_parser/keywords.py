@@ -16,9 +16,10 @@ FALSE = keyword("false") / False
 LP, RP = Literal("(").suppress(), Literal(")").suppress()
 LB, RB = Literal("[").suppress(), Literal("]").suppress()
 LC, RC = Literal("{").suppress(), Literal("}").suppress()
+LPC = Literal("%{").suppress()
+LDC = Literal("${").suppress()
 COMMA = Literal(",").suppress()
 
-CONCAT = Literal("||").set_parser_name("concat")
 MUL = Literal("*").set_parser_name("mul")
 DIV = Literal("/").set_parser_name("div")
 MOD = Literal("%").set_parser_name("mod")
@@ -26,9 +27,9 @@ POS = Literal("+").set_parser_name("pos")
 NEG = Literal("-").set_parser_name("neg")
 ADD = Literal("+").set_parser_name("add")
 SUB = Literal("-").set_parser_name("sub")
-BINARY_NOT = Literal("~").set_parser_name("binary_not")
-BINARY_AND = Literal("&").set_parser_name("binary_and")
-BINARY_OR = Literal("|").set_parser_name("binary_or")
+NOT = Literal("!").set_parser_name("not")
+AND = Literal("&&").set_parser_name("and")
+OR = Literal("||").set_parser_name("or")
 GTE = Literal(">=").set_parser_name("gte")
 LTE = Literal("<=").set_parser_name("lte")
 LT = Literal("<").set_parser_name("lt")
@@ -39,42 +40,39 @@ THEN = Literal("?").set_parser_name("if_then_else")
 COLON = Literal(":")
 ASSIGN = Optional(Literal("=")).suppress()
 ELLIPSIS = Literal("...")
-FOR = Keyword("for")
+FOR = Keyword("for").suppress()
 IN = Keyword("in")
-IF = Keyword("if")
+IF = Keyword("if").suppress()
+ELSE = Keyword("else").suppress()
 
 
 KNOWN_OPS = [
-    CONCAT,
     POS,
     NEG,
     MUL | DIV | MOD,
     ADD | SUB,
-    BINARY_NOT,
-    BINARY_AND,
-    BINARY_OR,
     GTE | LTE | LT | GT,
     EQ | NEQ,
-    (THEN, COLON)
+    (THEN, COLON),
+    NOT,
+    AND,
+    OR,
 ]
 
 
 unary_ops = {
+    NOT: RIGHT_ASSOC,
     POS: RIGHT_ASSOC,
     NEG: RIGHT_ASSOC,
-    BINARY_NOT: RIGHT_ASSOC,
 }
 
 
 binary_ops = {
-    "||": "concat",
     "*": "mul",
     "/": "div",
     "%": "mod",
     "+": "add",
     "-": "sub",
-    "&": "binary_and",
-    "|": "binary_or",
     "<": "lt",
     "<=": "lte",
     ">": "gt",
@@ -83,6 +81,8 @@ binary_ops = {
     "==": "eq",
     "!=": "neq",
     "<>": "neq",
+    "&&": "and",
+    "||": "or",
 }
 
 # NUMBERS

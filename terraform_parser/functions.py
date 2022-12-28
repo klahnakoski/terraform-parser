@@ -6,13 +6,11 @@
 #
 # Contact: Kyle Lahnakoski (kyle@lahnakoski.com)
 #
-
 import json
 
-from mo_dots import is_many
 from mo_imports import expect
 
-from mo_parsing import ParseResults, Forward, Group, is_number, Keyword
+from mo_parsing import ParseResults, Forward, Group, is_number, Keyword, quote
 from terraform_parser.keywords import binary_ops
 from terraform_parser.utils import SQL_NULL, Call, And
 
@@ -33,7 +31,7 @@ def keyword(keywords):
 
 
 def to_string(tokens):
-    value = json.loads(f'"{tokens[0]}"')
+    value = json.loads(f'"{tokens[0].replace("$${", "${").replace("%%{", "%{")}"')
     return {"literal": value}
 
 
@@ -41,17 +39,18 @@ def to_concat(tokens):
     items = list(tokens)
     if not items:
         return {"literal": ""}
-    if len(items) == 1:
+    if len(items) == 1 and (not isinstance(items[0], dict) or "from" not in items[0]):
         return tokens
     return {"concat": items}
 
 
-def to_literal(tokens):
-    return {"literal": tokens[0]}
+def to_multiline_string(tokens):
+    value = tokens[0].replace("$${", "${").replace("%%{", "%{")
+    return {"literal": value}
 
 
 def to_multiline(tokens):
-    return {"concat": multiline_string_parser.parse(tokens['content'])}
+    return list(multiline_string_parser.parse(tokens["content"]))
 
 
 def to_code(tokens):
@@ -76,7 +75,7 @@ def to_inner_object(tokens):
             v = v[0]
         if isinstance(v, dict):
             if "literal" in v:
-                v = v['literal']
+                v = v["literal"]
             else:
                 print("hi")
         prev = {v: prev}
@@ -97,9 +96,9 @@ def to_offset(tokens):
             select = call.kwargs.setdefault("select", {})
             value = select.get("value")
             if not value:
-                select['value'] = offset[0]['literal']
+                select["value"] = offset[0]["literal"]
             else:
-                select['value'] = value + "." + offset[0]['literal']
+                select["value"] = value + "." + offset[0]["literal"]
             return call
     return Call("get", [expr, *offset], {})
 
@@ -214,4 +213,3 @@ def to_json_operator(tokens):
                 acc.append(operand)
         binary_op = Call(op, acc, {})
     return binary_op
-
