@@ -13,7 +13,7 @@
     "description": "Terraform Parser - Parse Terraform to JSON",
     "extras_require": {"tests": ["mo-testing"]},
     "include_package_data": true,
-    "install_requires": ["mo-dots==9.300.22349", "mo-imports==7.298.22349", "mo-parsing==8.308.22362"],
+    "install_requires": ["mo-dots==9.300.22349", "mo-imports==7.298.22349", "mo-parsing==8.309.22362"],
     "license": "MPL 2.0",
     "long_description": {
         "$concat": [
@@ -62,6 +62,6 @@
     "name": "terraform-parser",
     "packages": ["terraform_parser"],
     "url": "https://github.com/klahnakoski/terraform-parser",
-    "version": "9.308.22362",
+    "version": "9.309.22362",
     "zip_safe": false
 }
