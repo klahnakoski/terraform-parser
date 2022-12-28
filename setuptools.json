@@ -1,0 +1,28 @@
+{
+    "author": "Kyle Lahnakoski",
+    "author_email": "kyle@lahnakoski.com",
+    "classifiers": [
+        "Development Status :: 2 - Pre-Alpha",
+        "Topic :: Software Development :: Libraries",
+        "Topic :: Software Development :: Libraries :: Python Modules",
+        "License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)",
+        "Programming Language :: Python :: 3.7",
+        "Programming Language :: Python :: 3.8",
+        "Programming Language :: Python :: 3.9"
+    ],
+    "description": "Terraform Parser - Parse Terraform to JSON",
+    "extras_require": {"tests": [
+                 "mo-logs",          "mo-json",       "mo-threads",       "mo-testing",
+               "pyLibrary",          "mo-math",         "mo-times", "jx-elasticsearch"
+    ]},
+    "include_package_data": true,
+    "install_requires": ["mo-future==7.298.22349", "mo-imports==7.298.22349"],
+    "license": "MPL 2.0",
+    "long_description": "",
+    "long_description_content_type": "text/markdown",
+    "name": "terraform-parser",
+    "packages": ["terraform_parser"],
+    "url": "https://github.com/klahnakoski/terraform-parser",
+    "version": "9.300.22349",
+    "zip_safe": false
+}
