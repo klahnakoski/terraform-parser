@@ -119,7 +119,7 @@ class ObjectStream(Stream):
         return ObjectStream(read(), type_, self._schema)
 
     def filter(self, predicate):
-        fact = factory(predicate, self.type_)
+        fact = factory(predicate, return_type=bool)
         filteror = fact.build(self.type_, self._schema)
 
         def read():
