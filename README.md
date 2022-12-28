@@ -27,7 +27,6 @@ The hope is to
 
 ## References
 
-* [futurice terraform examples](https://github.com/futurice/terraform-examples)
 * Look at what is done here - https://github.com/starhawking/python-terrascript
 * Parser for [HCL1](https://github.com/virtuald/pyhcl)
 * parser for [HCL2](https://pypi.org/project/python-hcl2/)
