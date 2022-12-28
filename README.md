@@ -1,6 +1,13 @@
 # terraform-parser
 
+[![PyPI Latest Release](https://img.shields.io/pypi/v/terraform-parser.svg)](https://pypi.org/project/terraform-parser/)
+[![Build Status](https://app.travis-ci.com/klahnakoski/terraform-parser.svg?branch=master)](https://travis-ci.com/github/klahnakoski/terraform-parser)
+ [![Coverage Status](https://coveralls.io/repos/github/klahnakoski/terraform-parser/badge.svg?branch=dev)](https://coveralls.io/github/klahnakoski/terraform-parser?branch=dev)
+[![Downloads](https://pepy.tech/badge/terraform-parser/month)](https://pepy.tech/project/terraform-parser)
+
+
 Parse Terraform scripts into JSON
+
 
 ## Status
 
