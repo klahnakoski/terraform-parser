@@ -16,6 +16,6 @@ setup(
     name='terraform-parser',
     packages=["terraform_parser"],
     url='https://github.com/klahnakoski/terraform-parser',
-    version='0.325.22362',
+    version='0.326.22362',
     zip_safe=False
 )
