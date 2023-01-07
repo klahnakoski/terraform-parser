@@ -4,3 +4,7 @@ tests/examples
 build
 *.egg-info
 __pycache__
+
+/setup.py
+
+

@@ -19,7 +19,7 @@ I am uncertain if configuration/template language, such as Terraform, should inc
 
 I would advocate a high level langauge (HLL), like Python, be used to produce the Terraform configuration with both HLL and Terraform be included in the repository. HLL is familiar, and the Terraform changes are easy to review.
 
-Using an HLL for Terraform generation removed the need for the [quirky template expressions](https://github.com/hashicorp/hcl/blob/main/hclsyntax/spec.md#template-expressions), complex expressions, and modules. 
+Using an HLL for Terraform generation removes the need for the [quirky template expressions](https://github.com/hashicorp/hcl/blob/main/hclsyntax/spec.md#template-expressions), complex expressions, and modules. 
 
 The hope is to 
 
