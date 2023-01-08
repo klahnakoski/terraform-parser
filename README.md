@@ -28,6 +28,7 @@ The hope is to
 * allow Python to modify data easily
 * write out terraform (in diff-friendly way)
 
+
 ## References
 
 * Look at what is done here - https://github.com/starhawking/python-terrascript
@@ -35,6 +36,8 @@ The hope is to
 * Existing parser for [HCL2](https://pypi.org/project/python-hcl2/)
 * Unicode Identifiers - [UAX31](http://unicode.org/reports/tr31/)
 * [Terraform Spec](https://github.com/hashicorp/hcl/blob/main/hclsyntax/spec.md)
+* [Diagram terraform](https://diagrams.mingrammer.com/docs/getting-started/installation
+* [Graphviz](https://www.graphviz.org/)
 
 
 
