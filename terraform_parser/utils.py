@@ -50,6 +50,7 @@ def normal_op(op, args, kwargs):
 
 scrub_op = simple_op
 
+
 def scrub(result):
     if result is SQL_NULL:
         return SQL_NULL
@@ -100,7 +101,3 @@ def keyword(keywords):
     return And([
         Keyword(k, caseless=True) for k in keywords.split(" ")
     ]).set_parser_name(keywords) / (lambda: keywords.replace(" ", "_"))
-
-
-
-

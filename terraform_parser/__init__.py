@@ -27,8 +27,9 @@ with NO_WHITESPACE:
     quote = Literal('"').suppress()
     string_segment = Regex(r"(\\\"|\$\$\{|\%\%\{|\$[^{]|\%[^{]|[^\"$%])+") / to_string
     compound_string = quote + template + quote
-    multiline_string = Regex(r"(\$\$\{|\%\%\{|\$[^{]|\%[^{]|[^$%])+") / to_multiline_string
-
+    multiline_string = (
+        Regex(r"(\$\$\{|\%\%\{|\$[^{]|\%[^{]|[^$%])+") / to_multiline_string
+    )
 
     rest = Forward()
 
@@ -141,26 +142,23 @@ with multiline_white:
         | path
     )
 
-    expression << (
-        infix_notation(
-            compound,
-            [
-                (splat_accessor, 1, LEFT_ASSOC, to_splat),
-                (dynamic_accessor, 1, LEFT_ASSOC, to_offset),
-                (simple_accessor, 1, LEFT_ASSOC, to_offset),
-                (ELLIPSIS, 1, LEFT_ASSOC, to_list),
-            ]
-            + [
-                (
-                    o,
-                    1 if o in unary_ops else (3 if isinstance(o, tuple) else 2),
-                    unary_ops.get(o, LEFT_ASSOC),
-                    to_json_operator,
-                )
-                for o in KNOWN_OPS
-            ],
-        )
-        / to_code
+    expression << infix_notation(
+        compound,
+        [
+            (splat_accessor, 1, LEFT_ASSOC, to_splat),
+            (dynamic_accessor, 1, LEFT_ASSOC, to_offset),
+            (simple_accessor, 1, LEFT_ASSOC, to_offset),
+            (ELLIPSIS, 1, LEFT_ASSOC, to_list),
+        ]
+        + [
+            (
+                o,
+                1 if o in unary_ops else (3 if isinstance(o, tuple) else 2),
+                unary_ops.get(o, LEFT_ASSOC),
+                to_json_operator,
+            )
+            for o in KNOWN_OPS
+        ],
     )
 
     resource = (
@@ -182,14 +180,14 @@ with multiline_white:
 
 with NO_WHITESPACE:
     if_template = Group(
-        (if_when + template("then")) /dict
-        + Optional(if_else + template)
-        + if_ends
+        (if_when + template("then")) / dict + Optional(if_else + template) + if_ends
     )("case")
     for_template = (for_start + Group(template("value"))("select") + for_end) / dict
     code = basic_template | if_template | for_template
     template << Group(ZeroOrMore(string_segment | code) / to_concat)
-    multiline_string_parser = Group(ZeroOrMore(multiline_string | code) / to_concat).finalize()
+    multiline_string_parser = Group(
+        ZeroOrMore(multiline_string | code) / to_concat
+    ).finalize()
 
 
 set_parser_names()
