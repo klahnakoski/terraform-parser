@@ -13,10 +13,11 @@ class TestDiagram(TestCase):
 
     def test_simple(self):
 
-# LOAD THE TERRAFORM
+        # LOAD THE TERRAFORM
 
-# MAKE CONNECTIONS
+        # MAKE CONNECTIONS
 
 
 
-# DIAGRAM
+        # DIAGRAM
+        pass
