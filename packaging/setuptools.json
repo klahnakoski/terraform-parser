@@ -8,14 +8,15 @@
         "License :: OSI Approved :: Mozilla Public License 2.0 (MPL 2.0)",
         "Programming Language :: Python :: 3.7",
         "Programming Language :: Python :: 3.8",
-        "Programming Language :: Python :: 3.9"
+        "Programming Language :: Python :: 3.9",
+        "Programming Language :: Python :: 3.10"
     ],
     "description": "Terraform Parser - Parse Terraform to JSON",
     "extras_require": {"tests": ["mo-testing", "mo-files", "mo-streams"]},
     "include_package_data": true,
     "install_requires": [
-                       "diagrams",    "mo-dots==9.341.23006", "mo-imports==7.341.23006",
-        "mo-parsing==8.341.23006", "mo-streams==1.342.23008"
+                       "diagrams",    "mo-dots==9.356.23062", "mo-imports==7.341.23006",
+        "mo-parsing==8.356.23062", "mo-streams==1.358.23070"
     ],
     "license": "MPL 2.0",
     "long_description": {
@@ -71,6 +72,6 @@
     "name": "terraform-parser",
     "packages": ["terraform_parser"],
     "url": "https://github.com/klahnakoski/terraform-parser",
-    "version": "0.342.23008",
+    "version": "0.358.23070",
     "zip_safe": false
 }
