@@ -1,3 +1,3 @@
-mo-testing
-mo-files
-mo-streams
+mo-testing>=7.559.24071
+mo-files>=6.556.24070
+mo-streams>=1.556.24070

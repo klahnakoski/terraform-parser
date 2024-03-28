@@ -1,0 +1,22 @@
+# Tests pass with these versions 2024-03-28
+# pip install --no-deps -r tests/requirements.lock
+diagrams==0.23.4
+graphviz==0.20.3
+hjson==3.1.0
+Jinja2==3.1.3
+MarkupSafe==2.1.5
+mo-collections==5.556.24070
+mo-dots==9.578.24081
+mo-files==6.579.24081
+mo-future==7.546.24057
+mo-imports==7.546.24057
+mo-json==6.579.24081
+mo-kwargs==7.578.24081
+mo-logs==8.579.24081
+mo-math==7.579.24081
+mo-parsing==8.580.24088
+mo-streams==1.579.24081
+mo-testing==7.559.24071
+mo-threads==6.556.24070
+mo-times==5.579.24081
+typed-ast==1.5.5
